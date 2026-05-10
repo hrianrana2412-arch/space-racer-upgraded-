@@ -146,11 +146,19 @@ function animate() {
     // This calculates the 'floor' of the tube accurately
     const frenetFrames = closedSpline.computeFrenetFrames(1000, true);
     const frameIndex = Math.floor(trackPosition * 1000);
+    // SWAP: Use Normal for the side-offset and Binormal for the 'Up' orientation
     const normal = frenetFrames.normals[frameIndex];
     const binormal = frenetFrames.binormals[frameIndex];
 
-    // Position ship relative to the track's internal floor
-    const finalPos = pos.clone().sub(binormal.clone().multiplyScalar(lateralOffset));
+    // This puts the ship INSIDE the tube
+    const finalPos = pos.clone().add(normal.clone().multiplyScalar(lateralOffset));
+    shipGroup.position.copy(finalPos);
+
+    // Orientation: Face forward, but use the BINORMAL as the 'Up' vector
+    const lookAtPos = pos.clone().add(tangent);
+    const m = new THREE.Matrix4();
+    m.lookAt(shipGroup.position, lookAtPos, binormal); 
+    shipGroup.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(m), 0.2);
 
     // Smoothly orient ship to face forward using the track's normal
     const lookAtPos = pos.clone().add(tangent);
