@@ -1,37 +1,50 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; }
+body, html { 
+    width: 100%; height: 100%; 
+    overflow: hidden; 
+    background-color: #000; 
+    font-family: 'Orbitron', sans-serif; 
+}
 
 #game-container { position: absolute; width: 100vw; height: 100vh; z-index: 1; }
 
-/* --- LEFT MENU --- */
 #menu-overlay {
     position: absolute; width: 100%; height: 100%; z-index: 100;
-    display: flex; background: linear-gradient(90deg, rgba(0,255,255,0.1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%);
+    display: flex; background: linear-gradient(90deg, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0) 100%);
+    pointer-events: none;
 }
 
-#left-panel { width: 380px; height: 100%; padding: 40px; display: flex; flex-direction: column; justify-content: center; pointer-events: auto; }
+#left-panel { 
+    width: 30%; height: 100%; 
+    padding: 2vw; 
+    display: flex; flex-direction: column; 
+    justify-content: center; 
+    pointer-events: auto; 
+}
 
-.section { background: rgba(0, 255, 255, 0.05); border-left: 5px solid #0ff; padding: 15px; margin: 10px 0; box-shadow: -10px 0 20px rgba(0,255,255,0.1); }
-h1 { font-size: 2.8rem; color: #fff; text-shadow: 0 0 20px #0ff; margin-bottom: 20px; font-weight: 900; }
+.section { 
+    background: rgba(0, 255, 255, 0.05); 
+    border-left: 4px solid #0ff; 
+    padding: 1.5vh; 
+    margin: 1vh 0; 
+    box-shadow: -5px 0 15px rgba(0,255,255,0.1);
+}
+
+h1 { font-size: 2.5vw; color: #fff; text-shadow: 0 0 15px #0ff; margin-bottom: 2vh; }
+h3 { font-size: 1vw; color: #0ff; margin-bottom: 0.5vh; }
 
 button {
-    background: rgba(0,0,0,0.6); border: 1px solid #0ff; color: #0ff; padding: 12px; margin: 5px 0;
-    width: 100%; cursor: pointer; font-family: 'Orbitron'; transition: 0.2s; text-align: left; padding-left: 20px;
+    background: rgba(0,0,0,0.6); border: 1px solid #0ff; color: #0ff; 
+    padding: 1vh; margin: 0.3vh 0;
+    width: 100%; cursor: pointer; font-family: 'Orbitron'; 
+    font-size: 0.8vw; transition: 0.2s; text-align: left;
 }
-button:hover { background: #0ff; color: #000; box-shadow: 0 0 20px #0ff; transform: scale(1.05); }
-input[type="color"] { width: 100%; height: 40px; margin-top: 10px; cursor: pointer; border: 1px solid #0ff; background: none; }
 
-/* --- HUD & WIN --- */
+button:hover { background: #0ff; color: #000; box-shadow: 0 0 15px #0ff; }
+
 #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-#speed-display { position: absolute; bottom: 40px; right: 40px; font-size: 50px; color: #0ff; text-shadow: 0 0 20px #0ff; }
-
-#victory-screen {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 200;
-    background: radial-gradient(circle, rgba(0,255,255,0.2) 0%, rgba(0,0,0,0.95) 100%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-}
-#victory-screen h2 { font-size: 6rem; color: #fff; text-shadow: 0 0 50px #0ff, 0 0 100px #0ff; font-weight: 900; }
+#speed-display { position: absolute; bottom: 5vh; right: 5vw; font-size: 4vw; color: #0ff; }
 
 .hidden { display: none !important; }
