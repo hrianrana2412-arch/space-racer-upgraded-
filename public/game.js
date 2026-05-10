@@ -7,7 +7,7 @@ document.getElementById('game-container').appendChild(renderer.domElement);
 
 let speed = 0, progress = 0, lateral = 0, nitro = 100, gameActive = false, isMultiplayer = false;
 let shipSettings = { color: "#ff00ff", model: 'Interceptor' };
-let curve, tubeGeo, shipBody, thruster;
+let curve, shipBody, thruster;
 const shipGroup = new THREE.Group();
 const keys = {};
 
@@ -16,13 +16,13 @@ function initWorld() {
     scene.clear();
     scene.background = new THREE.Color(0x000005);
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+    const sun = new THREE.DirectionalLight(0xffffff, 1.5);
     sun.position.set(10, 10, 10);
     scene.add(sun);
 
     const starGeo = new THREE.BufferGeometry();
     const starPos = [];
-    for(let i=0; i<8000; i++) starPos.push((Math.random()-0.5)*4000, (Math.random()-0.5)*4000, (Math.random()-0.5)*4000);
+    for(let i=0; i<10000; i++) starPos.push((Math.random()-0.5)*4000, (Math.random()-0.5)*4000, (Math.random()-0.5)*4000);
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
     scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.9})));
 }
@@ -63,22 +63,14 @@ window.buildShip = function() {
     if(!scene.children.includes(shipGroup)) scene.add(shipGroup);
 }
 
-// --- 4. BUTTON HOOKS ---
-window.setShipModel = function(m) { 
-    shipSettings.model = m; 
-    window.buildShip(); 
-};
-
+// --- 4. STARTING & LOGIC ---
+window.setShipModel = function(m) { shipSettings.model = m; window.buildShip(); };
 window.toggleMultiplayer = function() {
     isMultiplayer = !isMultiplayer;
     const btn = document.getElementById('multi-btn');
     if(btn) btn.innerText = isMultiplayer ? "MODE: MULTIPLAYER" : "MODE: OFFLINE";
 };
-
-document.getElementById('shipColor').oninput = (e) => { 
-    shipSettings.color = e.target.value; 
-    window.buildShip(); 
-};
+document.getElementById('shipColor').oninput = (e) => { shipSettings.color = e.target.value; window.buildShip(); };
 
 window.startGame = function(trackType) {
     initWorld();
@@ -91,18 +83,15 @@ window.startGame = function(trackType) {
     curve = new THREE.CatmullRomCurve3(pts);
     curve.closed = true;
     
-    // GENERATE TUBE
-    tubeGeo = new THREE.TubeGeometry(curve, 150, 25, 12, true);
-    const tubeMesh = new THREE.Mesh(tubeGeo, new THREE.MeshStandardMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.15}));
+    const tubeMesh = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 100, 25, 12, true),
+        new THREE.MeshStandardMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.15})
+    );
     scene.add(tubeMesh);
     
     window.buildShip();
     document.getElementById('menu-overlay').classList.add('hidden');
     document.getElementById('ui-layer').classList.remove('hidden');
-    
-    // SNAP CAMERA TO START POSITION IMMEDIATELY
-    progress = 0;
-    speed = 0;
     gameActive = true;
 };
 
@@ -118,15 +107,11 @@ function animate() {
         return;
     }
 
-    // THE CRASH PROTECTION: Wait for the tube math to exist
-    if(!tubeGeo || !tubeGeo.frenetFrames || !tubeGeo.frenetFrames.normals) {
-        console.log("Waiting for track math...");
-        return; 
-    }
+    if(!curve) return;
 
-    // Physics
+    // Control Physics
     const isNitro = keys['Shift'] && nitro > 0;
-    if (keys['w'] || keys['ArrowUp']) speed += 0.008;
+    if (keys['w'] || keys['ArrowUp']) speed += 0.007;
     else if (keys['s'] || keys['ArrowDown']) speed -= 0.015;
     else speed *= 0.985;
     speed = Math.max(0, Math.min(speed, isNitro ? 2.8 : 1.4));
@@ -135,7 +120,7 @@ function animate() {
     if (keys['d'] || keys['ArrowRight']) lateral += 0.5;
     lateral = Math.max(-18, Math.min(lateral, 18));
 
-    // Nitro
+    // Nitro FX
     if(isNitro) { 
         nitro -= 0.7; thruster.material.color.setHex(0xff00ff); 
         camera.fov = THREE.MathUtils.lerp(camera.fov, 95, 0.1);
@@ -145,29 +130,27 @@ function animate() {
     }
     camera.updateProjectionMatrix();
 
-    // Movement math
+    // Movement Physics
     progress += speed * 0.0004;
     if(progress > 1) progress = 0;
 
     const pos = curve.getPointAt(progress);
-    const tan = curve.getTangentAt(progress).normalize();
-    const frames = tubeGeo.frenetFrames;
-    const index = Math.floor(progress * (frames.normals.length - 1));
+    const lookAtPos = curve.getPointAt((progress + 0.01) % 1);
     
-    // This part causes the crash if index or frames is weird
-    if(frames.binormals[index] && frames.normals[index]) {
-        shipGroup.position.copy(pos)
-            .add(frames.binormals[index].clone().multiplyScalar(lateral))
-            .add(frames.normals[index].clone().multiplyScalar(15));
-        
-        shipGroup.lookAt(pos.clone().add(tan));
-        shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, (keys['a']?-0.8:0)+(keys['d']?0.8:0), 0.1);
-    }
+    shipGroup.position.copy(pos);
+    shipGroup.lookAt(lookAtPos);
+    
+    // Manual Positioning (No Frenet Frames needed)
+    shipGroup.translateX(lateral);
+    shipGroup.translateY(-8);
 
-    // Camera follow
-    const camOff = new THREE.Vector3(0, 7, -18).applyQuaternion(shipGroup.quaternion);
-    camera.position.copy(shipGroup.position.clone().add(camOff));
-    camera.lookAt(shipGroup.position.clone().add(tan.multiplyScalar(10)));
+    // Ship Banking
+    shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, (keys['a']?-0.8:0)+(keys['d']?0.8:0), 0.1);
+
+    // Dynamic Camera Follow
+    const camTarget = new THREE.Vector3(0, 6, -18).applyQuaternion(shipGroup.quaternion).add(shipGroup.position);
+    camera.position.lerp(camTarget, 0.15);
+    camera.lookAt(shipGroup.position.clone().add(shipGroup.getWorldDirection(new THREE.Vector3()).multiplyScalar(10)));
 
     document.getElementById('speed-display').innerText = Math.floor(speed * 420);
     document.getElementById('nitro-bar').style.width = nitro + '%';
