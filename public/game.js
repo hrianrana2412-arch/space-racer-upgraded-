@@ -1,4 +1,4 @@
-// --- 1. CORE ENGINE ---
+// --- 1. CORE ENGINE & GLOBALS ---
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -7,77 +7,110 @@ document.getElementById('game-container').appendChild(renderer.domElement);
 
 let speed = 0, progress = 0, lateral = 0, nitro = 100, gameActive = false;
 let shipSettings = { color: 0xff00ff, model: 'Interceptor' };
-let curve, tubeMesh, shipBody, thruster;
+let curve, tubeGeo, thruster;
 const shipGroup = new THREE.Group();
 const keys = {};
 
-// --- 2. THE UNIVERSE ---
-function initWorld() {
-    scene.clear();
-    scene.background = new THREE.Color(0x000005);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const sun = new THREE.PointLight(0xffffff, 2, 2000);
-    sun.position.set(100, 100, 100);
-    scene.add(sun);
+// --- 2. XBOX / GAMEPAD SUPPORT ---
+let gamepadIndex = null;
+window.addEventListener("gamepadconnected", (e) => {
+    console.log("Controller Connected: " + e.gamepad.id);
+    gamepadIndex = e.gamepad.index;
+});
 
-    // 10,000 Stars
-    const starGeo = new THREE.BufferGeometry();
-    const starPos = [];
-    for(let i=0; i<10000; i++) starPos.push((Math.random()-0.5)*4000, (Math.random()-0.5)*4000, (Math.random()-0.5)*4000);
-    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.8})));
+function handleGamepad() {
+    if (gamepadIndex === null) return;
+    const gp = navigator.getGamepads()[gamepadIndex];
+    
+    // Axis 0 is Left Stick Left/Right
+    if (Math.abs(gp.axes[0]) > 0.1) lateral += gp.axes[0] * 0.8;
+    
+    // Button 0 (A) or Button 7 (RT) for Gas
+    keys['w'] = gp.buttons[0].pressed || gp.buttons[7].pressed;
+    // Button 1 (B) or Button 6 (LT) for Brake
+    keys['s'] = gp.buttons[1].pressed || gp.buttons[6].pressed;
+    // Button 4 (LB) or 2 (X) for Nitro
+    keys['Shift'] = gp.buttons[4].pressed || gp.buttons[2].pressed;
 }
 
-// --- 3. SHIP GARAGE ---
+// --- 3. GARAGE & SHIP FIXES (Model Switching) ---
 function buildShip() {
-    shipGroup.clear();
-    const mat = new THREE.MeshStandardMaterial({ color: shipSettings.color, metalness: 0.9, roughness: 0.1 });
+    shipGroup.clear(); // Important for switching
+    const mat = new THREE.MeshStandardMaterial({ color: shipSettings.color, metalness: 0.8, roughness: 0.2 });
     
-    shipBody = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 4), mat);
-    shipGroup.add(shipBody);
+    // Core Fuselage (Used by all)
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 4), mat);
+    shipGroup.add(body);
 
-    const cockpit = new THREE.Mesh(new THREE.SphereGeometry(0.4, 12, 12), new THREE.MeshPhongMaterial({color: 0x00ffff, transparent:true, opacity:0.5}));
-    cockpit.position.set(0, 0.3, 0.8);
-    shipGroup.add(cockpit);
-
-    if(shipSettings.model === 'Interceptor') {
-        const wings = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.1, 1.5), mat);
+    if (shipSettings.model === 'Interceptor') {
+        const wings = new THREE.Mesh(new THREE.BoxGeometry(5, 0.1, 2), mat);
         shipGroup.add(wings);
+    } else if (shipSettings.model === 'Speeder') {
+        const nose = new THREE.Mesh(new THREE.ConeGeometry(0.5, 2, 4), mat);
+        nose.rotation.x = Math.PI / 2; nose.position.z = 2.5;
+        shipGroup.add(nose);
+    } else if (shipSettings.model === 'Tanker') {
+        const shield = new THREE.Mesh(new THREE.BoxGeometry(3, 2.5, 0.5), mat);
+        shield.position.z = 1.5;
+        shipGroup.add(shield);
     }
 
-    thruster = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 0.5), new THREE.MeshBasicMaterial({color: 0x00ffff}));
-    thruster.rotation.x = Math.PI/2; thruster.position.z = -2.1;
+    thruster = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 0.5), new THREE.MeshBasicMaterial({ color: 0x00ffff }));
+    thruster.rotation.x = Math.PI / 2; thruster.position.z = -2.2;
     shipGroup.add(thruster);
-    
     scene.add(shipGroup);
 }
 
-// --- 4. TRACK GENERATOR ---
-function generateTrack(level) {
-    if(tubeMesh) scene.remove(tubeMesh);
+// --- 4. WORLD & MINIMAP FIXES ---
+const mCanvas = document.getElementById('minimap');
+const mCtx = mCanvas ? mCanvas.getContext('2d') : null;
+
+function updateMinimap() {
+    if (!mCtx) return;
+    mCanvas.width = 150; mCanvas.height = 150;
+    // Draw Track Circle
+    mCtx.strokeStyle = '#0ff'; mCtx.lineWidth = 2;
+    mCtx.beginPath(); mCtx.arc(75, 75, 60, 0, Math.PI * 2); mCtx.stroke();
+    // Draw Player Dot
+    const angle = progress * Math.PI * 2;
+    const mx = 75 + Math.cos(angle) * 60;
+    const my = 75 + Math.sin(angle) * 60;
+    mCtx.fillStyle = '#ff00ff'; mCtx.beginPath(); mCtx.arc(mx, my, 6, 0, Math.PI * 2); mCtx.fill();
+}
+
+// --- 5. TRACK & START ---
+function generateTrack(type) {
     const points = [];
-    const r = level === 'Asteroid Run' ? 220 : 140;
+    const r = (type === 'Asteroid Run') ? 220 : 140;
     for (let i = 0; i <= 100; i++) {
         const t = (i / 100) * Math.PI * 2;
         const x = r * (2 + Math.cos(3 * t)) * Math.cos(2 * t);
         const y = r * (2 + Math.cos(3 * t)) * Math.sin(2 * t);
         const z = r * Math.sin(3 * t);
-        points.push(new THREE.Vector3(x, y, z));
+        trackPoints.push(new THREE.Vector3(x, y, z)); // Note: Ensure trackPoints is declared
     }
-    curve = new THREE.CatmullRomCurve3(points);
+}
+// Clean Global Curve Logic
+function createCurve(r = 150) {
+    const pts = [];
+    for(let i=0; i<=100; i++) {
+        const t = (i/100)*Math.PI*2;
+        pts.push(new THREE.Vector3(r*(2+Math.cos(3*t))*Math.cos(2*t), r*(2+Math.cos(3*t))*Math.sin(2*t), r*Math.sin(3*t)));
+    }
+    curve = new THREE.CatmullRomCurve3(pts);
     curve.closed = true;
-    const tubeGeo = new THREE.TubeGeometry(curve, 100, 25, 12, true);
-    tubeMesh = new THREE.Mesh(tubeGeo, new THREE.MeshStandardMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.1}));
-    scene.add(tubeMesh);
+    tubeGeo = new THREE.TubeGeometry(curve, 100, 25, 12, true);
+    scene.add(new THREE.Mesh(tubeGeo, new THREE.MeshBasicMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.1})));
 }
 
-// --- 5. CONTROLS & HUD ---
 window.setShipModel = (m) => { shipSettings.model = m; buildShip(); };
 document.getElementById('shipColor').oninput = (e) => { shipSettings.color = e.target.value; buildShip(); };
 
 window.startGame = (track) => {
-    initWorld();
-    generateTrack(track);
+    scene.clear();
+    scene.background = new THREE.Color(0x000005);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    createCurve(track === 'Asteroid Run' ? 220 : 140);
     buildShip();
     document.getElementById('menu-overlay').classList.add('hidden');
     document.getElementById('ui-layer').classList.remove('hidden');
@@ -87,69 +120,47 @@ window.startGame = (track) => {
 // --- 6. ANIMATION LOOP ---
 function animate() {
     requestAnimationFrame(animate);
-    if(!gameActive || !curve) return;
+    handleGamepad(); // Controller update
+    if (!gameActive || !curve) return;
 
-    // Nitro/Speed Logic
     const isNitro = keys['Shift'] && nitro > 0;
-    if (keys['w'] || keys['ArrowUp']) speed += 0.007;
-    else if (keys['s'] || keys['ArrowDown']) speed -= 0.012;
+    if (keys['w']) speed += 0.007;
+    else if (keys['s']) speed -= 0.015;
     else speed *= 0.985;
-    speed = Math.max(0, Math.min(speed, isNitro ? 2.6 : 1.4));
+    speed = Math.max(0, Math.min(speed, isNitro ? 2.8 : 1.4));
 
-    // Steering
-    if (keys['a'] || keys['ArrowLeft']) lateral -= 0.45;
-    if (keys['d'] || keys['ArrowRight']) lateral += 0.45;
+    if (keys['a']) lateral -= 0.5;
+    if (keys['d']) lateral += 0.5;
     lateral = Math.max(-18, Math.min(lateral, 18));
 
-    // Nitro Effects
-    if(isNitro) { 
-        nitro -= 0.7; thruster.material.color.setHex(0xff00ff); 
-        camera.fov = THREE.MathUtils.lerp(camera.fov, 92, 0.1);
-    } else {
-        if(nitro < 100) nitro += 0.25; thruster.material.color.setHex(0x00ffff);
-        camera.fov = THREE.MathUtils.lerp(camera.fov, 75, 0.1);
-    }
+    if(isNitro) { nitro -= 0.6; camera.fov = THREE.MathUtils.lerp(camera.fov, 95, 0.1); }
+    else { if(nitro < 100) nitro += 0.2; camera.fov = THREE.MathUtils.lerp(camera.fov, 75, 0.1); }
     camera.updateProjectionMatrix();
 
-    // Movement Physics
     progress += speed * 0.0004;
-    if(progress > 1) progress = 0;
+    if (progress > 1) progress = 0;
 
     const pos = curve.getPointAt(progress);
-    const lookAtPos = curve.getPointAt((progress + 0.01) % 1);
+    const tan = curve.getTangentAt(progress).normalize();
+    const frames = tubeGeo.frenetFrames;
+    const index = Math.floor(progress * (frames.normals.length - 1));
+
+    shipGroup.position.copy(pos)
+        .add(frames.binormals[index].clone().multiplyScalar(lateral))
+        .add(frames.normals[index].clone().multiplyScalar(15));
     
-    shipGroup.position.copy(pos);
-    shipGroup.lookAt(lookAtPos);
-    
-    // Position ship inside tube manually
-    shipGroup.translateX(lateral);
-    shipGroup.translateY(-8); // Pulls it to the "floor"
+    shipGroup.lookAt(pos.clone().add(tan));
+    updateMinimap();
 
-    // Visual Banking
-    const tilt = (keys['a']?-0.7:0) + (keys['d']?0.7:0);
-    shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, tilt, 0.1);
-    thruster.scale.setScalar(1 + Math.random() * 0.3);
+    const camOff = new THREE.Vector3(0, 7, -18).applyQuaternion(shipGroup.quaternion);
+    camera.position.copy(shipGroup.position.clone().add(camOff));
+    camera.lookAt(shipGroup.position.clone().add(tan.multiplyScalar(10)));
 
-    // Camera follow with slight lag for "feel"
-    const camTarget = new THREE.Vector3(0, 6, -16).applyQuaternion(shipGroup.quaternion).add(shipGroup.position);
-    camera.position.lerp(camTarget, 0.15);
-    camera.lookAt(shipGroup.position.clone().add(shipGroup.getWorldDirection(new THREE.Vector3()).multiplyScalar(10)));
-
-    // HUD Update
     document.getElementById('speed-display').innerText = Math.floor(speed * 420);
     document.getElementById('nitro-bar').style.width = nitro + '%';
-    
     renderer.render(scene, camera);
 }
 
-// Window Events
 window.onkeydown = (e) => keys[e.key] = true;
 window.onkeyup = (e) => keys[e.key] = false;
-window.onresize = () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-};
-
-// Initial Menu Background
-initWorld(); buildShip(); animate();
+animate();
