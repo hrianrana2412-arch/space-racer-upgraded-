@@ -111,13 +111,13 @@ const clock = new THREE.Clock();
 function animate() {
     requestAnimationFrame(animate);
 
-    // 1. INPUT & PHYSICS
+    // 1. INPUT & SPEED PHYSICS
     let currentMax = keys.shift && nitro > 0 ? nitroSpeed : maxSpeed;
     if (keys.w) speed += acceleration;
     else if (keys.s) speed -= braking;
     else speed -= friction;
 
-    // Nitro Effects
+    // Nitro FOV and Speed Effect
     if (keys.shift && nitro > 0 && speed > 0.5) {
         nitro -= 0.5;
         camera.fov = THREE.MathUtils.lerp(camera.fov, 90, 0.1);
@@ -130,50 +130,54 @@ function animate() {
     if (speed > currentMax) speed -= friction * 2;
     if (speed < 0) speed = 0;
 
-    // Steering
+    // Steering logic
     if (keys.a) lateralOffset -= turnSpeed;
     if (keys.d) lateralOffset += turnSpeed;
-    lateralOffset = THREE.MathUtils.clamp(lateralOffset, -tubeRadius + 2, tubeRadius - 2);
+    lateralOffset = THREE.MathUtils.clamp(lateralOffset, -tubeRadius + 5, tubeRadius - 5);
 
-    // 2. THE TRACK LOGIC (The "Anti-Spin" Fix)
+    // 2. TRACK POSITION LOGIC
     trackPosition += (speed * 0.0001);
     if (trackPosition >= 1) trackPosition -= 1;
 
-    // Get the exact point and direction on the track
+    // GET STABLE FRENET FRAME (The Fix)
     const pos = closedSpline.getPointAt(trackPosition);
     const tangent = closedSpline.getTangentAt(trackPosition).normalize();
     
-    // Create a stable coordinate system (Frenet Frame)
-    // This ensures 'up' is always relative to the track, not the world
-    const frame = closedSpline.computeFrenetFrames(400, true);
-    const index = Math.floor(trackPosition * 400);
-    const normal = frame.normals[index];
-    const binormal = frame.binormals[index];
+    // This calculates the 'floor' of the tube accurately
+    const frenetFrames = closedSpline.computeFrenetFrames(1000, true);
+    const frameIndex = Math.floor(trackPosition * 1000);
+    const normal = frenetFrames.normals[frameIndex];
+    const binormal = frenetFrames.binormals[frameIndex];
 
-    // Position the ship using the track's binormal for horizontal offset
+    // Position ship relative to the track's internal floor
     const finalPos = pos.clone().add(binormal.clone().multiplyScalar(lateralOffset));
     shipGroup.position.copy(finalPos);
 
-    // Lock orientation to the track path
+    // Smoothly orient ship to face forward using the track's normal
+    const lookAtPos = pos.clone().add(tangent);
     const m = new THREE.Matrix4();
-    m.lookAt(finalPos, pos.clone().add(tangent), normal);
-    shipGroup.quaternion.setFromRotationMatrix(m);
+    m.lookAt(shipGroup.position, lookAtPos, normal);
+    shipGroup.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(m), 0.2);
 
-    // 3. SMOOTH CAMERA
-    // Camera stays behind the ship relative to the track's orientation
-    const camOffset = new THREE.Vector3(0, 5, -15);
+    // Visual banking for "Asphalt" feel
+    const bankTarget = (keys.a ? 0.8 : 0) + (keys.d ? -0.8 : 0);
+    shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, bankTarget, 0.1);
+
+    // 3. PRO-LEVEL CAMERA FOLLOW
+    const camOffset = new THREE.Vector3(0, 6, -15);
     camOffset.applyQuaternion(shipGroup.quaternion);
-    camera.position.lerp(shipGroup.position.clone().add(camOffset), 0.1);
+    const targetCamPos = shipGroup.position.clone().add(camOffset);
+    
+    camera.position.lerp(targetCamPos, 0.1);
     camera.lookAt(shipGroup.position.clone().add(tangent.clone().multiplyScalar(10)));
 
-    // 4. UI UPDATE
-    speedUI.innerText = Math.floor(speed * 100);
-    nitroUI.style.width = nitro + "%";
+    // 4. UI UPDATES
+    speedUI.innerHTML = Math.floor(speed * 100) + ' <span style="font-size: 14px;">KM/H</span>';
+    nitroUI.style.width = nitro + '%';
     updateMinimap();
 
     renderer.render(scene, camera);
 }
-
 // --- MINIMAP LOGIC ---
 const minimapCanvas = document.getElementById('minimap');
 const ctx = minimapCanvas.getContext('2d');
