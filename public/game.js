@@ -1,130 +1,90 @@
- // --- SCENE SETUP ---
+// --- 1. CORE SETUP ---
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x000000, 0.001);
+scene.background = new THREE.Color(0x000005);
+scene.fog = new THREE.Fog(0x000005, 1, 1000);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
 document.getElementById('game-container').appendChild(renderer.domElement);
 
-// --- LIGHTING ---
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-const light = new THREE.PointLight(0x00ffff, 1, 500);
+// Lights
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+const light = new THREE.PointLight(0x00ffff, 2, 500);
 scene.add(light);
 
-// --- THE TRACK (Built as a mathematical Path) ---
-const curve = new THREE.TorusKnotCurve(150, 40, 2, 3); // Main track shape
-const tubeGeo = new THREE.TubeGeometry(curve, 200, 15, 12, true);
-const tubeMat = new THREE.MeshStandardMaterial({ 
-    color: 0x111111, 
-    wireframe: true, 
-    emissive: 0x00ffff, 
-    emissiveIntensity: 0.5 
-});
-const track = new THREE.Mesh(tubeGeo, tubeMat);
-scene.add(track);
+// --- 2. THE TRACK (Simple & Stable) ---
+const curve = new THREE.TorusKnotCurve(150, 40, 2, 3);
+const tubeGeo = new THREE.TubeGeometry(curve, 100, 15, 8, true);
+const tubeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+const trackMesh = new THREE.Mesh(tubeGeo, tubeMat);
+scene.add(trackMesh);
 
-// --- PLAYER SHIP ---
+// --- 3. PLAYER SHIP ---
 const shipGroup = new THREE.Group();
+const body = new THREE.Mesh(
+    new THREE.BoxGeometry(2, 1, 4),
+    new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff })
+);
+shipGroup.add(body);
 scene.add(shipGroup);
 
-// Ship Body
-const shipBody = new THREE.Mesh(
-    new THREE.ConeGeometry(2, 6, 4), 
-    new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff, emissiveIntensity: 0.5 })
-);
-shipBody.rotateX(Math.PI / 2);
-shipGroup.add(shipBody);
-
-// Engine Glow
-const engine = new THREE.Mesh(
-    new THREE.CircleGeometry(1, 16),
-    new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide })
-);
-engine.position.z = -3.1;
-shipGroup.add(engine);
-
-// --- PHYSICS & CONTROLS ---
+// --- 4. ENGINE STATE ---
 let speed = 0;
-let trackPos = 0;
+let progress = 0;
 let lateral = 0;
-const keys = { w: false, a: false, s: false, d: false, shift: false };
+const keys = {};
 
-window.addEventListener('keydown', (e) => {
-    if(e.key === 'w' || e.key === 'ArrowUp') keys.w = true;
-    if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = true;
-    if(e.key === 's' || e.key === 'ArrowDown') keys.s = true;
-    if(e.key === 'd' || e.key === 'ArrowRight') keys.d = true;
-    if(e.key === 'Shift') keys.shift = true;
-});
-window.addEventListener('keyup', (e) => {
-    if(e.key === 'w' || e.key === 'ArrowUp') keys.w = false;
-    if(e.key === 'a' || e.key === 'ArrowLeft') keys.a = false;
-    if(e.key === 's' || e.key === 'ArrowDown') keys.s = false;
-    if(e.key === 'd' || e.key === 'ArrowRight') keys.d = false;
-    if(e.key === 'Shift') keys.shift = false;
-});
+window.onkeydown = (e) => keys[e.key] = true;
+window.onkeyup = (e) => keys[e.key] = false;
 
-// --- MAIN LOOP ---
+// --- 5. ANIMATION LOOP ---
 function animate() {
     requestAnimationFrame(animate);
 
-    // 1. Movement Logic
-    const maxSpeed = keys.shift ? 1.2 : 0.7;
-    if (keys.w) speed += 0.005;
-    else if (keys.s) speed -= 0.02;
-    else speed *= 0.98; // Friction
-    speed = Math.min(Math.max(speed, 0), maxSpeed);
+    // Controls
+    if (keys['w'] || keys['ArrowUp']) speed += 0.005;
+    else if (keys['s'] || keys['ArrowDown']) speed -= 0.01;
+    else speed *= 0.98;
+    speed = Math.max(0, Math.min(speed, 1.2));
 
-    if (keys.a) lateral -= 0.2;
-    if (keys.d) lateral += 0.2;
-    lateral = Math.min(Math.max(lateral, -10), 10); // Keep inside tube walls
+    if (keys['a'] || keys['ArrowLeft']) lateral -= 0.2;
+    if (keys['d'] || keys['ArrowRight']) lateral += 0.2;
+    lateral = Math.max(-10, Math.min(lateral, 10));
 
-    // 2. Track Navigation
-    trackPos += speed * 0.001;
-    if (trackPos > 1) trackPos -= 1;
+    // Movement
+    progress += speed * 0.0005;
+    if (progress > 1) progress = 0;
 
-    // Get point and orientation from the curve
-    const pos = curve.getPointAt(trackPos);
-    const tangent = curve.getTangentAt(trackPos);
+    // Position ship on curve
+    const pt = curve.getPointAt(progress);
+    const tan = curve.getTangentAt(progress);
+    shipGroup.position.copy(pt);
+    shipGroup.lookAt(pt.clone().add(tan));
     
-    // Calculate a stable "Up" using the Frenet Frame of the tube
-    const frames = tubeGeo.frenetFrames;
-    const index = Math.floor(trackPos * (frames.normals.length - 1));
-    const normal = frames.normals[index];
-    const binormal = frames.binormals[index];
+    // Apply lateral offset (move left/right)
+    shipGroup.translateX(lateral);
 
-    // Final Ship Position (Positioned on the inner floor)
-    const finalPos = pos.clone()
-        .add(normal.clone().multiplyScalar(lateral))
-        .add(binormal.clone().multiplyScalar(-10)); // Push to "floor"
-    
-    shipGroup.position.copy(finalPos);
-
-    // Orientation
-    const lookAtPos = pos.clone().add(tangent);
-    shipGroup.lookAt(lookAtPos);
-    // Apply banking based on turn
-    shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, (keys.a ? 0.8 : 0) + (keys.d ? -0.8 : 0), 0.1);
-
-    // 3. Camera
-    const camOffset = new THREE.Vector3(0, 5, -15);
-    camOffset.applyQuaternion(shipGroup.quaternion);
-    camera.position.lerp(shipGroup.position.clone().add(camOffset), 0.1);
+    // Camera follow
+    const camPos = new THREE.Vector3(0, 8, -20);
+    camPos.applyQuaternion(shipGroup.quaternion);
+    camera.position.copy(shipGroup.position.clone().add(camPos));
     camera.lookAt(shipGroup.position);
 
-    // 4. UI
-    document.getElementById('speed-display').innerText = Math.floor(speed * 500);
-    document.getElementById('nitro-bar').style.width = (keys.shift ? '50%' : '100%');
+    // UI
+    document.getElementById('speed-display').innerText = Math.floor(speed * 400);
+    const nitro = document.getElementById('nitro-bar');
+    if(nitro) nitro.style.width = keys['Shift'] ? '50%' : '100%';
 
     renderer.render(scene, camera);
 }
 
-window.addEventListener('resize', () => {
+// Handle resizing
+window.onresize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-});
+};
 
+// START
 animate();
