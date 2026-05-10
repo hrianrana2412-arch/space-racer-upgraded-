@@ -1,54 +1,16 @@
- <!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEON SPACE RACER - ULTIMATE</title>
-    <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
-        #game-container { position: absolute; width: 100%; height: 100%; z-index: 1; }
-
-        /* --- MENU OVERLAY (Fixed for Visibility) --- */
-        #menu-overlay {
-            position: absolute; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.4); /* Transparent so you can see the ship */
-            z-index: 100; display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-start; color: #0ff;
-            padding-top: 50px; pointer-events: none;
-        }
-
-        .menu-card {
-            background: rgba(0, 20, 40, 0.9);
-            border: 2px solid #0ff;
-            padding: 15px; border-radius: 10px;
-            margin: 10px; width: 300px; text-align: center;
-            pointer-events: auto; /* Re-enable clicks for buttons */
-        }
-
-        button {
-            background: #0ff; border: none; color: #000;
-            padding: 10px; margin: 5px; font-weight: bold;
-            cursor: pointer; width: 90%; border-radius: 5px;
-        }
-
-        button:hover { background: #fff; box-shadow: 0 0 15px #0ff; }
-        input[type="color"] { width: 100%; height: 30px; cursor: pointer; }
-        .hidden { display: none !important; }
-
-        /* --- HUD --- */
-        #ui-layer { position: absolute; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-        #telemetry { position: absolute; top: 20px; right: 20px; color: #0ff; text-align: right; }
-        #speed-display { font-size: 40px; font-weight: bold; }
-        #nitro-bar-container { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 250px; height: 10px; border: 1px solid #f0f; }
-        #nitro-bar { width: 100%; height: 100%; background: #f0f; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Space Racer</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container"></div>
 
     <div id="menu-overlay">
-        <h1 style="text-shadow: 0 0 10px #0ff;">NEON RACER</h1>
-        
+        <h1>NEON RACER</h1>
         <div class="menu-card">
             <h3>GARAGE</h3>
             <input type="color" id="shipColor" value="#ff00ff">
@@ -56,20 +18,19 @@
             <button onclick="setShipModel('Speeder')">Speeder</button>
             <button onclick="setShipModel('Tanker')">Tanker</button>
         </div>
-
         <div class="menu-card">
-            <h3>MISSIONS</h3>
-            <button onclick="startGame('Neon Circuit')">Neon Circuit</button>
-            <button onclick="startGame('Asteroid Run')">Asteroid Run</button>
+            <button onclick="startGame('Neon Circuit')">START RACE</button>
             <button onclick="toggleMultiplayer()" id="multi-btn">MODE: OFFLINE</button>
         </div>
     </div>
 
     <div id="ui-layer" class="hidden">
-        <div id="telemetry">
-            <div id="speed-display">0</div><div>KM/H</div>
+        <div style="position:absolute; top:20px; right:20px; color:#0ff;">
+            <div id="speed-display" style="font-size:40px;">0</div><div>KM/H</div>
         </div>
-        <div id="nitro-bar-container"><div id="nitro-bar"></div></div>
+        <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:200px; height:10px; border:1px solid #f0f;">
+            <div id="nitro-bar" style="width:100%; height:100%; background:#f0f;"></div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
