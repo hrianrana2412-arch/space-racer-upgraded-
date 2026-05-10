@@ -8,12 +8,11 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.getElementById('game-container').appendChild(renderer.domElement);
 
-// Lights
 scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 const light = new THREE.PointLight(0x00ffff, 2, 1000);
 scene.add(light);
 
-// --- 2. THE ENVIRONMENT (Stars & Planets) ---
+// --- 2. ENVIRONMENT (Stars & Planets) ---
 const starGeo = new THREE.BufferGeometry();
 const starCoords = [];
 for (let i = 0; i < 3000; i++) {
@@ -22,7 +21,6 @@ for (let i = 0; i < 3000; i++) {
 starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starCoords, 3));
 scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 1.2 })));
 
-// A big distant planet
 const planet = new THREE.Mesh(
     new THREE.SphereGeometry(100, 32, 32),
     new THREE.MeshStandardMaterial({ color: 0xff4400, emissive: 0x220000 })
@@ -30,11 +28,10 @@ const planet = new THREE.Mesh(
 planet.position.set(400, 200, -800);
 scene.add(planet);
 
-// --- 3. THE TRACK (Standard CatmullRom) ---
+// --- 3. THE TRACK ---
 const trackPoints = [];
 for (let i = 0; i <= 100; i++) {
     const t = (i / 100) * Math.PI * 2;
-    // Mathematical formula for a Torus Knot path
     const r = 200;
     const x = r * (2 + Math.cos(3 * t)) * Math.cos(2 * t);
     const y = r * (2 + Math.cos(3 * t)) * Math.sin(2 * t);
@@ -49,7 +46,7 @@ const tubeMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, wireframe: tru
 const trackMesh = new THREE.Mesh(tubeGeo, tubeMat);
 scene.add(trackMesh);
 
-// --- UPGRADED REALISTIC SHIP ---
+// --- 4. THE REALISTIC INTERCEPTOR ---
 const shipGroup = new THREE.Group();
 
 const fuselage = new THREE.Mesh(
@@ -89,65 +86,34 @@ const keys = {};
 window.onkeydown = (e) => keys[e.key] = true;
 window.onkeyup = (e) => keys[e.key] = false;
 
-// --- UPGRADED INTERCEPTOR SHIP ---
-const shipGroup = new THREE.Group();
-const fuselage = new THREE.Mesh(
-    new THREE.BoxGeometry(1.5, 0.8, 5),
-    new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.2 })
-);
-shipGroup.add(fuselage);
-
-const cockpit = new THREE.Mesh(
-    new THREE.SphereGeometry(0.6, 16, 16),
-    new THREE.MeshPhongMaterial({ color: 0x00ffff, transparent: true, opacity: 0.7 })
-);
-cockpit.position.set(0, 0.4, 1);
-shipGroup.add(cockpit);
-
-const wings = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 0.2, 2), 
-    new THREE.MeshStandardMaterial({ color: 0x555555 })
-);
-wings.position.z = -0.5;
-shipGroup.add(wings);
-
-const thruster = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.5, 0.5, 0.2, 16),
-    new THREE.MeshBasicMaterial({ color: 0x00ffff })
-);
-thruster.rotation.x = Math.PI / 2;
-thruster.position.z = -2.5;
-shipGroup.add(thruster);
-scene.add(shipGroup);
-
-// --- ANIMATION LOOP ---
 function animate() {
     requestAnimationFrame(animate);
 
-    // 1. ARCADE PHYSICS (Centrifugal Drift)
+    // Speed
     if (keys['w'] || keys['ArrowUp']) speed += 0.005;
     else if (keys['s'] || keys['ArrowDown']) speed -= 0.01;
     else speed *= 0.98;
     speed = Math.max(0, Math.min(speed, 1.5));
 
-    // Force that pulls you to the walls during curves
+    // Centrifugal Drift (Track curvature pull)
     const curveIntensity = Math.sin(progress * Math.PI * 10) * 0.15; 
     drift += curveIntensity * speed;
     drift *= 0.95; 
 
+    // Steering
     if (keys['a'] || keys['ArrowLeft']) lateral -= 0.4;
     if (keys['d'] || keys['ArrowRight']) lateral += 0.4;
     
-    // Check for wall hits
-    let currentPos = lateral + drift;
-    if (currentPos > 18 || currentPos < -18) {
-        speed *= 0.95; // Slamming into wall slows you down
-        lateral *= -0.8; // Bounce
+    // Wall Collision Logic
+    let totalPos = lateral + drift;
+    if (totalPos > 18 || totalPos < -18) {
+        speed *= 0.95; 
+        lateral *= -0.8; 
         drift *= -1;
     }
     lateral = Math.max(-19, Math.min(lateral, 19));
 
-    // 2. POSITIONING
+    // Movement on track
     progress += speed * 0.0004;
     if (progress > 1) progress = 0;
 
@@ -158,16 +124,16 @@ function animate() {
     shipGroup.lookAt(pos.clone().add(tan));
     shipGroup.translateX(lateral);
     
-    // Stay inside the tube floor
+    // Position inside the tube floor
     const normalDir = new THREE.Vector3(0,0,0).sub(pos).normalize();
     shipGroup.position.add(normalDir.multiplyScalar(5));
 
-    // 3. VISUALS
+    // Visuals (Banking & Thruster)
     const tilt = (keys['a']?-0.8:0) + (keys['d']?0.8:0) + (drift * 0.5);
     shipGroup.rotation.z = THREE.MathUtils.lerp(shipGroup.rotation.z, tilt, 0.1);
     thruster.scale.setScalar(1 + Math.random() * 0.2);
 
-    // 4. CAMERA
+    // Camera with shake
     const camOffset = new THREE.Vector3(0, 6, -18);
     camOffset.applyQuaternion(shipGroup.quaternion);
     const shake = (Math.random() - 0.5) * (speed * 0.06);
