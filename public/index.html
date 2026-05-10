@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Space Racer 3D</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Game Canvas -->
+    <div id="game-container"></div>
+
+    <!-- UI Overlay -->
+    <div id="ui-layer">
+        <!-- Minimap -->
+        <div id="minimap-container">
+            <canvas id="minimap"></canvas>
+        </div>
+
+        <!-- Telemetry -->
+        <div id="telemetry">
+            <div id="speed-display">0 <span style="font-size: 14px;">KM/H</span></div>
+            <div id="lap-counter">LAP 1/3</div>
+        </div>
+
+        <!-- Nitro Meter -->
+        <div id="nitro-bar-container">
+            <div id="nitro-bar"></div>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div id="mobile-controls">
+            <div class="control-group left-group">
+                <button id="btn-left" class="touch-btn">◀</button>
+                <button id="btn-right" class="touch-btn">▶</button>
+            </div>
+            <div class="control-group right-group">
+                <button id="btn-brake" class="touch-btn brake-btn">BRAKE</button>
+                <button id="btn-accel" class="touch-btn">ACCEL</button>
+                <button id="btn-nitro" class="touch-btn nitro-btn">NITRO</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js Libraries (R128) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
