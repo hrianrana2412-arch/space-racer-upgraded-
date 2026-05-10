@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Neon Space Racer</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+overflow:hidden;
+background:#050816;
+font-family:Arial,sans-serif;
+color:white;
+}
+canvas{
+display:block;
+width:100vw;
+height:100vh;
+}
+
+#menu{
+position:fixed;
+inset:0;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+gap:20px;
+background:radial-gradient(circle at center,#1d2455,#050816);
+z-index:20;
+}
+
+button{
+padding:16px 30px;
+border:none;
+border-radius:14px;
+font-size:20px;
+background:#ff2f92;
+color:white;
+font-weight:bold;
+}
+
+#hud{
+position:fixed;
+top:10px;
+left:10px;
+display:flex;
+gap:10px;
+z-index:10;
+}
+
+.panel{
+background:rgba(0,0,0,0.5);
+padding:12px;
+border-radius:12px;
+min-width:120px;
+backdrop-filter:blur(8px);
+}
+
+.touch{
+position:fixed;
+width:80px;
+height:80px;
+background:rgba(255,255,255,0.12);
+border-radius:18px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:34px;
+z-index:12;
+user-select:none;
+}
+
+#left{bottom:20px;left:20px}
+#right{bottom:20px;left:120px}
+#accel{bottom:20px;right:20px;background:rgba(0,200,255,0.25)}
+#boost{bottom:120px;right:20px;background:rgba(255,50,150,0.25)}
+
+#msg{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+font-size:40px;
+font-weight:bold;
+display:none;
+z-index:15;
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+<h1 style="font-size:56px;color:#ff2f92">NEON SPACE RACER</h1>
+<button onclick="startGame()">PLAY OFFLINE</button>
+<p>Mobile + Desktop Supported</p>
+</div>
+
+<div id="hud">
+<div class="panel">
+<div>Speed</div>
+<div id="speed">0</div>
+</div>
+
+<div class="panel">
+<div>Nitro</div>
+<div id="nitro">100</div>
+</div>
+
+<div class="panel">
+<div>Lap</div>
+<div id="lap">1 / 3</div>
+</div>
+</div>
+
+<div id="msg"></div>
+
+<div class="touch" id="left">◀</div>
+<div class="touch" id="right">▶</div>
+<div class="touch" id="accel">▲</div>
+<div class="touch" id="boost">⚡</div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas=document.getElementById('game');
+const ctx=canvas.getContext('2d');
+
+function resize(){
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+}
+resize();
+window.addEventListener('resize',resize);
+
+const keys={
+left:false,
+right:false,
+accel:false,
+boost:false
+};
+
+const player={
+x:900,
+y:0,
+angle:Math.PI/2,
+speed:0,
+nitro:100,
+lap:0,
+checkpoint:0
+};
+
+const ai={
+x:850,
+y:0,
+angle:Math.PI/2,
+speed:7,
+checkpoint:0
+};
+
+const camera={
+x:0,
+y:0,
+zoom:1
+};
+
+const stars=[];
+for(let i=0;i<300;i++){
+stars.push({
+x:(Math.random()-0.5)*8000,
+y:(Math.random()-0.5)*8000,
+s:Math.random()*3
+});
+}
+
+const track=[];
+const trackRadius=900;
+
+for(let i=0;i<36;i++){
+const a=(Math.PI*2/36)*i;
+const r=trackRadius + Math.sin(i*0.6)*120;
+
+track.push({
+x:Math.cos(a)*r,
+y:Math.sin(a)*r
+});
+}
+
+function bind(id,key){
+const el=document.getElementById(id);
+
+el.addEventListener('touchstart',e=>{
+e.preventDefault();
+keys[key]=true;
+});
+
+el.addEventListener('touchend',e=>{
+e.preventDefault();
+keys[key]=false;
+});
+
+el.addEventListener('mousedown',()=>keys[key]=true);
+el.addEventListener('mouseup',()=>keys[key]=false);
+}
+
+bind('left','left');
+bind('right','right');
+bind('accel','accel');
+bind('boost','boost');
+
+document.addEventListener('keydown',e=>{
+if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;
+if(e.key==='ArrowRight'||e.key==='d')keys.right=true;
+if(e.key==='ArrowUp'||e.key==='w')keys.accel=true;
+if(e.key===' ')keys.boost=true;
+});
+
+document.addEventListener('keyup',e=>{
+if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;
+if(e.key==='ArrowRight'||e.key==='d')keys.right=false;
+if(e.key==='ArrowUp'||e.key==='w')keys.accel=false;
+if(e.key===' ')keys.boost=false;
+});
+
+function startGame(){
+document.getElementById('menu').style.display='none';
+requestAnimationFrame(loop);
+}
+
+function nearestCheckpoint(entity){
+let best=0;
+let dist=Infinity;
+
+track.forEach((p,i)=>{
+const d=Math.hypot(entity.x-p.x,entity.y-p.y);
+if(d<dist){
+dist=d;
+best=i;
+}
+});
+
+return best;
+}
+
+function updatePlayer(){
+
+if(keys.left) player.angle-=0.05;
+if(keys.right) player.angle+=0.05;
+
+if(keys.accel){
+player.speed+=0.18;
+}
+
+let maxSpeed=10;
+
+if(keys.boost && player.nitro>0){
+maxSpeed=18;
+player.speed+=0.28;
+player.nitro-=0.7;
+camera.zoom=1.07;
+}else{
+player.nitro=Math.min(100,player.nitro+0.15);
+camera.zoom+=(1-camera.zoom)*0.08;
+}
+
+player.speed*=0.985;
+player.speed=Math.min(player.speed,maxSpeed);
+
+player.x+=Math.cos(player.angle)*player.speed;
+player.y+=Math.sin(player.angle)*player.speed;
+
+const cp=nearestCheckpoint(player);
+
+if(cp<5 && player.checkpoint>30){
+player.lap++;
+if(player.lap>=3){
+document.getElementById('msg').style.display='block';
+document.getElementById('msg').innerText='YOU WIN!';
+}
+}
+
+player.checkpoint=cp;
+}
+
+function updateAI(){
+
+const target=track[(ai.checkpoint+1)%track.length];
+
+const dx=target.x-ai.x;
+const dy=target.y-ai.y;
+
+const desired=Math.atan2(dy,dx);
+
+let diff=desired-ai.angle;
+
+while(diff>Math.PI) diff-=Math.PI*2;
+while(diff<-Math.PI) diff+=Math.PI*2;
+
+ai.angle+=diff*0.04;
+
+ai.x+=Math.cos(ai.angle)*ai.speed;
+ai.y+=Math.sin(ai.angle)*ai.speed;
+
+if(Math.hypot(dx,dy)<120){
+ai.checkpoint=(ai.checkpoint+1)%track.length;
+}
+}
+
+function drawStars(){
+
+for(const s of stars){
+
+const x=s.x-camera.x*0.15;
+const y=s.y-camera.y*0.15;
+
+ctx.fillStyle='white';
+ctx.fillRect(x,y,s.s,s.s);
+
+if(player.speed>10){
+ctx.strokeStyle='rgba(255,255,255,0.5)';
+ctx.beginPath();
+ctx.moveTo(x,y);
+ctx.lineTo(x-player.speed*4,y);
+ctx.stroke();
+}
+}
+}
+
+function drawTrack(){
+
+ctx.shadowBlur=60;
+ctx.shadowColor='#00c8ff';
+
+ctx.strokeStyle='#274bff';
+ctx.lineWidth=190;
+
+ctx.beginPath();
+
+track.forEach((p,i)=>{
+if(i===0)ctx.moveTo(p.x,p.y);
+else ctx.lineTo(p.x,p.y);
+});
+
+ctx.closePath();
+ctx.stroke();
+
+ctx.shadowBlur=25;
+ctx.strokeStyle='#ff2f92';
+ctx.lineWidth=8;
+
+ctx.beginPath();
+
+track.forEach((p,i)=>{
+if(i===0)ctx.moveTo(p.x,p.y);
+else ctx.lineTo(p.x,p.y);
+});
+
+ctx.closePath();
+ctx.stroke();
+}
+
+function drawShip(x,y,angle,color){
+
+ctx.save();
+ctx.translate(x,y);
+ctx.rotate(angle);
+
+ctx.shadowBlur=30;
+ctx.shadowColor=color;
+
+ctx.fillStyle=color;
+
+ctx.beginPath();
+ctx.moveTo(28,0);
+ctx.lineTo(-20,-14);
+ctx.lineTo(-8,0);
+ctx.lineTo(-20,14);
+ctx.closePath();
+ctx.fill();
+
+ctx.restore();
+}
+
+function render(){
+
+ctx.fillStyle='#050816';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ctx.save();
+
+ctx.translate(canvas.width/2,canvas.height/2);
+ctx.scale(camera.zoom,camera.zoom);
+ctx.translate(-camera.x,-camera.y);
+
+drawStars();
+drawTrack();
+
+drawShip(ai.x,ai.y,ai.angle,'#ff4040');
+drawShip(player.x,player.y,player.angle,'#00d0ff');
+
+ctx.restore();
+}
+
+function updateHUD(){
+document.getElementById('speed').innerText=Math.floor(player.speed*20);
+document.getElementById('nitro').innerText=Math.floor(player.nitro);
+document.getElementById('lap').innerText=(player.lap+1)+' / 3';
+}
+
+function loop(){
+
+updatePlayer();
+updateAI();
+
+camera.x+=(player.x-camera.x)*0.08;
+camera.y+=(player.y-camera.y)*0.08;
+
+render();
+updateHUD();
+
+requestAnimationFrame(loop);
+}
+</script>
+
+</body>
+</html>
