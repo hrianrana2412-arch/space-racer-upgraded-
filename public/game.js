@@ -15,14 +15,14 @@ const keys = {};
 function initWorld() {
     scene.clear();
     scene.background = new THREE.Color(0x000005);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     const sun = new THREE.DirectionalLight(0xffffff, 1.2);
     sun.position.set(10, 10, 10);
     scene.add(sun);
 
     const starGeo = new THREE.BufferGeometry();
     const starPos = [];
-    for(let i=0; i<10000; i++) starPos.push((Math.random()-0.5)*4000, (Math.random()-0.5)*4000, (Math.random()-0.5)*4000);
+    for(let i=0; i<8000; i++) starPos.push((Math.random()-0.5)*4000, (Math.random()-0.5)*4000, (Math.random()-0.5)*4000);
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
     scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 0.9})));
 }
@@ -63,7 +63,7 @@ window.buildShip = function() {
     if(!scene.children.includes(shipGroup)) scene.add(shipGroup);
 }
 
-// --- 4. BUTTON HOOKS (Ensuring HTML can see these) ---
+// --- 4. BUTTON HOOKS ---
 window.setShipModel = function(m) { 
     shipSettings.model = m; 
     window.buildShip(); 
@@ -90,12 +90,19 @@ window.startGame = function(trackType) {
     }
     curve = new THREE.CatmullRomCurve3(pts);
     curve.closed = true;
+    
+    // GENERATE TUBE
     tubeGeo = new THREE.TubeGeometry(curve, 150, 25, 12, true);
-    scene.add(new THREE.Mesh(tubeGeo, new THREE.MeshStandardMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.15})));
+    const tubeMesh = new THREE.Mesh(tubeGeo, new THREE.MeshStandardMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.15}));
+    scene.add(tubeMesh);
     
     window.buildShip();
     document.getElementById('menu-overlay').classList.add('hidden');
     document.getElementById('ui-layer').classList.remove('hidden');
+    
+    // SNAP CAMERA TO START POSITION IMMEDIATELY
+    progress = 0;
+    speed = 0;
     gameActive = true;
 };
 
@@ -111,11 +118,15 @@ function animate() {
         return;
     }
 
-    if(!tubeGeo || !tubeGeo.frenetFrames) return;
+    // THE CRASH PROTECTION: Wait for the tube math to exist
+    if(!tubeGeo || !tubeGeo.frenetFrames || !tubeGeo.frenetFrames.normals) {
+        console.log("Waiting for track math...");
+        return; 
+    }
 
-    // Control Physics
+    // Physics
     const isNitro = keys['Shift'] && nitro > 0;
-    if (keys['w'] || keys['ArrowUp']) speed += 0.007;
+    if (keys['w'] || keys['ArrowUp']) speed += 0.008;
     else if (keys['s'] || keys['ArrowDown']) speed -= 0.015;
     else speed *= 0.985;
     speed = Math.max(0, Math.min(speed, isNitro ? 2.8 : 1.4));
@@ -124,7 +135,7 @@ function animate() {
     if (keys['d'] || keys['ArrowRight']) lateral += 0.5;
     lateral = Math.max(-18, Math.min(lateral, 18));
 
-    // Nitro Camera Warp
+    // Nitro
     if(isNitro) { 
         nitro -= 0.7; thruster.material.color.setHex(0xff00ff); 
         camera.fov = THREE.MathUtils.lerp(camera.fov, 95, 0.1);
@@ -134,7 +145,7 @@ function animate() {
     }
     camera.updateProjectionMatrix();
 
-    // Movement
+    // Movement math
     progress += speed * 0.0004;
     if(progress > 1) progress = 0;
 
@@ -143,14 +154,17 @@ function animate() {
     const frames = tubeGeo.frenetFrames;
     const index = Math.floor(progress * (frames.normals.length - 1));
     
-    shipGroup.position.copy(pos)
-        .add(frames.binormals[index].clone().multiplyScalar(lateral))
-        .add(frames.normals[index].clone().multiplyScalar(15));
-    
-    shipGroup.lookAt(pos.clone().add(tan));
-    shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, (keys['a']?-0.8:0)+(keys['d']?0.8:0), 0.1);
+    // This part causes the crash if index or frames is weird
+    if(frames.binormals[index] && frames.normals[index]) {
+        shipGroup.position.copy(pos)
+            .add(frames.binormals[index].clone().multiplyScalar(lateral))
+            .add(frames.normals[index].clone().multiplyScalar(15));
+        
+        shipGroup.lookAt(pos.clone().add(tan));
+        shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, (keys['a']?-0.8:0)+(keys['d']?0.8:0), 0.1);
+    }
 
-    // Dynamic Camera Follow
+    // Camera follow
     const camOff = new THREE.Vector3(0, 7, -18).applyQuaternion(shipGroup.quaternion);
     camera.position.copy(shipGroup.position.clone().add(camOff));
     camera.lookAt(shipGroup.position.clone().add(tan.multiplyScalar(10)));
@@ -162,12 +176,6 @@ function animate() {
 
 window.onkeydown = (e) => keys[e.key] = true;
 window.onkeyup = (e) => keys[e.key] = false;
-
-window.onresize = () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-};
 
 initWorld(); 
 window.buildShip(); 
