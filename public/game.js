@@ -93,14 +93,18 @@ window.startGame = (track) => {
 
 function animate() {
     requestAnimationFrame(animate);
-    if(!gameActive) return;
+    
+    // THE SAFETY FIX: If the track or its frames aren't ready yet, don't run the physics
+    if(!gameActive || !tubeGeo || !tubeGeo.frenetFrames) return;
 
-    // Physics
-    const isNitro = keys['Shift'] && nitro > 0;
+    // 1. PHYSICS & INPUTS
+    const isNitro = (keys['Shift'] || keys['ShiftLeft'] || keys['ShiftRight']) && nitro > 0;
+    
     if (keys['w'] || keys['ArrowUp']) speed += 0.006;
     else if (keys['s'] || keys['ArrowDown']) speed -= 0.01;
     else speed *= 0.98;
-    speed = Math.min(Math.max(speed, 0), isNitro ? 2.2 : 1.3);
+    
+    speed = Math.min(Math.max(speed, 0), isNitro ? 2.5 : 1.3);
 
     if (keys['a'] || keys['ArrowLeft']) lateral -= 0.4;
     if (keys['d'] || keys['ArrowRight']) lateral += 0.4;
@@ -108,39 +112,53 @@ function animate() {
 
     // Nitro handling
     if(isNitro) { 
-        nitro -= 0.5; thruster.material.color.setHex(0xff00ff); 
+        nitro -= 0.5; 
+        if(thruster) thruster.material.color.setHex(0xff00ff); 
         camera.fov = THREE.MathUtils.lerp(camera.fov, 90, 0.1);
     } else {
-        if(nitro < 100) nitro += 0.2; thruster.material.color.setHex(0x00ffff);
+        if(nitro < 100) nitro += 0.2; 
+        if(thruster) thruster.material.color.setHex(0x00ffff);
         camera.fov = THREE.MathUtils.lerp(camera.fov, 75, 0.1);
     }
     camera.updateProjectionMatrix();
 
-    // Movement
+    // 2. MOVEMENT
     progress += speed * 0.0004;
     if(progress > 1) progress = 0;
 
     const pos = curve.getPointAt(progress);
     const tan = curve.getTangentAt(progress).normalize();
-    const index = Math.floor(progress * (tubeGeo.frenetFrames.normals.length - 1));
-    const normal = tubeGeo.frenetFrames.normals[index];
-    const binormal = tubeGeo.frenetFrames.binormals[index];
+    
+    // Stable Frenet Frame calculation
+    const frames = tubeGeo.frenetFrames;
+    const index = Math.floor(progress * (frames.normals.length - 1));
+    const normal = frames.normals[index];
+    const binormal = frames.binormals[index];
 
-    // THE INSIDE-TRACK FIX
-    shipGroup.position.copy(pos).add(binormal.clone().multiplyScalar(lateral)).add(normal.clone().multiplyScalar(15));
+    // Position ship INSIDE the track
+    shipGroup.position.copy(pos)
+        .add(binormal.clone().multiplyScalar(lateral))
+        .add(normal.clone().multiplyScalar(15));
+        
     shipGroup.lookAt(pos.clone().add(tan));
     
-    // Banking
-    shipGroup.rotation.z += (keys['a'] ? 0.5 : 0) + (keys['d'] ? -0.5 : 0);
+    // Banking animation
+    const bankTarget = (keys['a'] ? -0.8 : 0) + (keys['d'] ? 0.8 : 0);
+    shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, bankTarget, 0.1);
 
-    // Camera
+    // 3. CAMERA
     const camOff = new THREE.Vector3(0, 7, -18).applyQuaternion(shipGroup.quaternion);
     camera.position.copy(shipGroup.position.clone().add(camOff));
     camera.lookAt(shipGroup.position.clone().add(tan.multiplyScalar(10)));
 
-    // UI
-    document.getElementById('speed-display').innerText = Math.floor(speed * 400);
-    document.getElementById('nitro-bar').style.width = nitro + '%';
+    // 4. UI
+    const speedEl = document.getElementById('speed-display');
+    const nitroEl = document.getElementById('nitro-bar');
+    if(speedEl) speedEl.innerText = Math.floor(speed * 400);
+    if(nitroEl) nitroEl.style.width = nitro + '%';
+
+    renderer.render(scene, camera);
+}
 
     renderer.render(scene, camera);
 }
