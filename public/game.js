@@ -150,8 +150,7 @@ function animate() {
     const binormal = frenetFrames.binormals[frameIndex];
 
     // Position ship relative to the track's internal floor
-    const finalPos = pos.clone().add(binormal.clone().multiplyScalar(lateralOffset));
-    shipGroup.position.copy(finalPos);
+    const finalPos = pos.clone().sub(binormal.clone().multiplyScalar(lateralOffset));
 
     // Smoothly orient ship to face forward using the track's normal
     const lookAtPos = pos.clone().add(tangent);
