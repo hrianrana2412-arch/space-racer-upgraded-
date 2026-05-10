@@ -112,8 +112,10 @@ function animate() {
     requestAnimationFrame(animate);
     if(!gameActive) {
         shipGroup.rotation.y += 0.01;
-        trackOutline.rotation.z += 0.005; // Make the outline spin in menu
-        camera.position.set(0, 40, 150); camera.lookAt(0,0,0);
+        trackOutline.rotation.z += 0.003;
+        // Moved camera much closer (X: 15, Y: 10, Z: 35)
+        camera.position.set(15, 10, 35); 
+        camera.lookAt(0, 0, 0);
     } else {
         const isNitro = keys['Shift'] && nitro > 0;
         speed = Math.max(0, Math.min(speed + (keys['w']?0.01:-0.015), isNitro ? 3.8 : 1.9));
