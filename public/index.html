@@ -3,46 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Space Racer 3D - Ultimate</title>
-    <link rel="stylesheet" href="style.css">
+    <title>NEON SPACE RACER - ULTIMATE</title>
     <style>
-        #menu-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #0ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .menu-card { background: rgba(0,255,255,0.05); border: 1px solid #0ff; padding: 20px; border-radius: 10px; margin: 10px; width: 300px; text-align: center; }
-        button { background: #0ff; border: none; padding: 10px; margin: 5px; font-weight: bold; cursor: pointer; width: 80%; border-radius: 5px; transition: 0.3s; }
-        button:hover { background: #fff; box-shadow: 0 0 15px #0ff; }
-        input[type="color"] { width: 100%; height: 40px; cursor: pointer; border: none; background: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; }
+        
+        #game-container { position: absolute; width: 100%; height: 100%; }
+
+        /* --- MENU SYSTEM --- */
+        #menu-overlay {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,20,40,0.9) 0%, rgba(0,0,0,1) 100%);
+            z-index: 100; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: #0ff;
+        }
+
+        .menu-card {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid #0ff;
+            padding: 20px; border-radius: 15px;
+            margin: 10px; width: 320px; text-align: center;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        h1 { font-size: 3em; letter-spacing: 8px; text-shadow: 0 0 15px #0ff; margin-bottom: 10px; }
+
+        button {
+            background: transparent; border: 1px solid #0ff;
+            color: #0ff; padding: 12px; margin: 5px;
+            font-weight: bold; cursor: pointer; width: 90%;
+            border-radius: 5px; transition: 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        button:hover { background: #0ff; color: #000; box-shadow: 0 0 20px #0ff; }
+
+        input[type="color"] { width: 100%; height: 40px; cursor: pointer; border: none; background: none; margin-top: 10px; }
+
         .hidden { display: none !important; }
+
+        /* --- HUD ELEMENTS --- */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+
+        #telemetry {
+            position: absolute; top: 20px; right: 20px;
+            text-align: right; color: #0ff; text-shadow: 0 0 10px #0ff;
+        }
+
+        #speed-display { font-size: 48px; font-weight: bold; }
+
+        #nitro-bar-container {
+            position: absolute; bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            width: 300px; height: 12px;
+            border: 1px solid #f0f; border-radius: 6px;
+            background: rgba(255, 0, 255, 0.1);
+        }
+
+        #nitro-bar { width: 100%; height: 100%; background: #f0f; box-shadow: 0 0 15px #f0f; transition: width 0.1s; }
+
+        #minimap-container {
+            position: absolute; top: 20px; left: 20px;
+            width: 150px; height: 150px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50%; background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- MOBILE JOYSTICK --- */
+        #joystick-zone {
+            position: absolute; bottom: 40px; left: 40px;
+            width: 120px; height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #0ff; border-radius: 50%;
+            pointer-events: auto; /* Required for touch */
+        }
+
+        #joystick-knob {
+            position: absolute; width: 50px; height: 50px;
+            background: #0ff; border-radius: 50%;
+            top: 35px; left: 35px; box-shadow: 0 0 15px #0ff;
+        }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
     <div id="game-container"></div>
 
     <div id="menu-overlay">
-        <h1 style="letter-spacing: 5px; text-shadow: 0 0 20px #0ff;">NEON RACER</h1>
+        <h1>NEON RACER</h1>
         
         <div class="menu-card">
-            <h3>SHIP CUSTOMIZATION</h3>
-            <label>Paint Color:</label>
+            <h3>GARAGE</h3>
+            <label>SHIP COLOR</label>
             <input type="color" id="shipColor" value="#ff00ff">
-            <label>Chassis:</label>
-            <button onclick="setShipModel('Interceptor')">Interceptor</button>
-            <button onclick="setShipModel('Speeder')">Speeder</button>
+            <div style="margin-top: 15px;">
+                <button onclick="setShipModel('Interceptor')">Interceptor</button>
+                <button onclick="setShipModel('Speeder')">Speeder</button>
+                <button onclick="setShipModel('Tanker')">Tanker</button>
+            </div>
         </div>
 
         <div class="menu-card">
-            <h3>SELECT TRACK</h3>
+            <h3>SELECT MISSION</h3>
             <button onclick="startGame('Neon Circuit')">Neon Circuit</button>
             <button onclick="startGame('Asteroid Run')">Asteroid Run</button>
             <button onclick="startGame('Freeplay')">Freeplay (Infinite)</button>
         </div>
+        
+        <div style="margin-top: 10px;">
+            <button onclick="toggleMultiplayer()" id="multi-btn" style="width: auto; padding: 10px 30px;">MODE: OFFLINE</button>
+        </div>
     </div>
 
     <div id="ui-layer" class="hidden">
-        <div id="minimap-container"><canvas id="minimap"></canvas></div>
-        <div id="telemetry">
-            <div id="speed-display">0</div><div style="color:#0ff; font-size: 12px;">KM/H</div>
+        <div id="minimap-container">
+            <canvas id="minimap"></canvas>
         </div>
-        <div id="nitro-bar-container"><div id="nitro-bar"></div></div>
+
+        <div id="telemetry">
+            <div id="speed-display">000</div>
+            <div style="font-size: 14px; letter-spacing: 2px;">KM / H</div>
+        </div>
+
+        <div id="nitro-bar-container">
+            <div id="nitro-bar"></div>
+        </div>
+
+        <div id="joystick-zone">
+            <div id="joystick-knob"></div>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
