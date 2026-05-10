@@ -8,17 +8,34 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.getElementById('game-container').appendChild(renderer.domElement);
 
-// Lights
 scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 const light = new THREE.PointLight(0x00ffff, 2, 500);
 scene.add(light);
 
-// --- 2. THE TRACK (Simple & Stable) ---
-const curve = new THREE.TorusKnotCurve(150, 40, 2, 3);
-const tubeGeo = new THREE.TubeGeometry(curve, 100, 15, 8, true);
-const tubeMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
-const trackMesh = new THREE.Mesh(tubeGeo, tubeMat);
+// --- 2. THE TRACK (Compatible Version) ---
+// Using TorusKnotGeometry directly to get the path
+const trackGeo = new THREE.TorusKnotGeometry(150, 10, 200, 20, 2, 3);
+const trackMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true });
+const trackMesh = new THREE.Mesh(trackGeo, trackMat);
 scene.add(trackMesh);
+
+// Extract path for the ship
+const points = [];
+for (let i = 0; i < trackGeo.parameters.tubularSegments; i++) {
+    const p = new THREE.Vector3();
+    // Manual math for Torus Knot path
+    const t = (i / trackGeo.parameters.tubularSegments) * Math.PI * 2;
+    const p_val = 2;
+    const q_val = 3;
+    const r = 150;
+    const tube = 10;
+    p.x = r * (2 + Math.cos(q_val * t)) * Math.cos(p_val * t);
+    p.y = r * (2 + Math.cos(q_val * t)) * Math.sin(p_val * t);
+    p.z = r * Math.sin(q_val * t);
+    points.push(p);
+}
+const curve = new THREE.CatmullRomCurve3(points);
+curve.closed = true;
 
 // --- 3. PLAYER SHIP ---
 const shipGroup = new THREE.Group();
@@ -42,7 +59,6 @@ window.onkeyup = (e) => keys[e.key] = false;
 function animate() {
     requestAnimationFrame(animate);
 
-    // Controls
     if (keys['w'] || keys['ArrowUp']) speed += 0.005;
     else if (keys['s'] || keys['ArrowDown']) speed -= 0.01;
     else speed *= 0.98;
@@ -52,39 +68,30 @@ function animate() {
     if (keys['d'] || keys['ArrowRight']) lateral += 0.2;
     lateral = Math.max(-10, Math.min(lateral, 10));
 
-    // Movement
     progress += speed * 0.0005;
     if (progress > 1) progress = 0;
 
-    // Position ship on curve
     const pt = curve.getPointAt(progress);
     const tan = curve.getTangentAt(progress);
     shipGroup.position.copy(pt);
     shipGroup.lookAt(pt.clone().add(tan));
     
-    // Apply lateral offset (move left/right)
     shipGroup.translateX(lateral);
 
-    // Camera follow
     const camPos = new THREE.Vector3(0, 8, -20);
     camPos.applyQuaternion(shipGroup.quaternion);
     camera.position.copy(shipGroup.position.clone().add(camPos));
     camera.lookAt(shipGroup.position);
 
-    // UI
     document.getElementById('speed-display').innerText = Math.floor(speed * 400);
-    const nitro = document.getElementById('nitro-bar');
-    if(nitro) nitro.style.width = keys['Shift'] ? '50%' : '100%';
 
     renderer.render(scene, camera);
 }
 
-// Handle resizing
 window.onresize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 };
 
-// START
 animate();
