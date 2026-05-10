@@ -49,62 +49,133 @@ const tubeMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, wireframe: tru
 const trackMesh = new THREE.Mesh(tubeGeo, tubeMat);
 scene.add(trackMesh);
 
-// --- 4. PLAYER SHIP ---
+// --- UPGRADED REALISTIC SHIP ---
 const shipGroup = new THREE.Group();
-const body = new THREE.Mesh(
-    new THREE.BoxGeometry(2, 1, 5),
-    new THREE.MeshStandardMaterial({ color: 0xff00ff, emissive: 0xff00ff })
+
+const fuselage = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 0.8, 5),
+    new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.2 })
 );
-shipGroup.add(body);
+shipGroup.add(fuselage);
+
+const cockpit = new THREE.Mesh(
+    new THREE.SphereGeometry(0.6, 16, 16),
+    new THREE.MeshPhongMaterial({ color: 0x00ffff, transparent: true, opacity: 0.7 })
+);
+cockpit.position.set(0, 0.4, 1);
+shipGroup.add(cockpit);
+
+const wings = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 0.2, 2), 
+    new THREE.MeshStandardMaterial({ color: 0x555555 })
+);
+wings.position.z = -0.5;
+shipGroup.add(wings);
+
+const thruster = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 0.2, 16),
+    new THREE.MeshBasicMaterial({ color: 0x00ffff })
+);
+thruster.rotation.x = Math.PI / 2;
+thruster.position.z = -2.5;
+shipGroup.add(thruster);
+
 scene.add(shipGroup);
 
 // --- 5. CONTROLS & PHYSICS ---
-let speed = 0, progress = 0, lateral = 0;
+let speed = 0, progress = 0, lateral = 0, drift = 0;
 const keys = {};
+
 window.onkeydown = (e) => keys[e.key] = true;
 window.onkeyup = (e) => keys[e.key] = false;
 
+// --- UPGRADED INTERCEPTOR SHIP ---
+const shipGroup = new THREE.Group();
+const fuselage = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5, 0.8, 5),
+    new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.2 })
+);
+shipGroup.add(fuselage);
+
+const cockpit = new THREE.Mesh(
+    new THREE.SphereGeometry(0.6, 16, 16),
+    new THREE.MeshPhongMaterial({ color: 0x00ffff, transparent: true, opacity: 0.7 })
+);
+cockpit.position.set(0, 0.4, 1);
+shipGroup.add(cockpit);
+
+const wings = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 0.2, 2), 
+    new THREE.MeshStandardMaterial({ color: 0x555555 })
+);
+wings.position.z = -0.5;
+shipGroup.add(wings);
+
+const thruster = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.5, 0.5, 0.2, 16),
+    new THREE.MeshBasicMaterial({ color: 0x00ffff })
+);
+thruster.rotation.x = Math.PI / 2;
+thruster.position.z = -2.5;
+shipGroup.add(thruster);
+scene.add(shipGroup);
+
+// --- ANIMATION LOOP ---
 function animate() {
     requestAnimationFrame(animate);
 
-    // Physics
+    // 1. ARCADE PHYSICS (Centrifugal Drift)
     if (keys['w'] || keys['ArrowUp']) speed += 0.005;
     else if (keys['s'] || keys['ArrowDown']) speed -= 0.01;
     else speed *= 0.98;
-    speed = Math.max(0, Math.min(speed, 1.3));
+    speed = Math.max(0, Math.min(speed, 1.5));
 
-    if (keys['a'] || keys['ArrowLeft']) lateral -= 0.3;
-    if (keys['d'] || keys['ArrowRight']) lateral += 0.3;
-    lateral = Math.max(-15, Math.min(lateral, 15));
+    // Force that pulls you to the walls during curves
+    const curveIntensity = Math.sin(progress * Math.PI * 10) * 0.15; 
+    drift += curveIntensity * speed;
+    drift *= 0.95; 
 
-    // Progress
+    if (keys['a'] || keys['ArrowLeft']) lateral -= 0.4;
+    if (keys['d'] || keys['ArrowRight']) lateral += 0.4;
+    
+    // Check for wall hits
+    let currentPos = lateral + drift;
+    if (currentPos > 18 || currentPos < -18) {
+        speed *= 0.95; // Slamming into wall slows you down
+        lateral *= -0.8; // Bounce
+        drift *= -1;
+    }
+    lateral = Math.max(-19, Math.min(lateral, 19));
+
+    // 2. POSITIONING
     progress += speed * 0.0004;
     if (progress > 1) progress = 0;
 
-    // Get position on curve
     const pos = curve.getPointAt(progress);
     const tan = curve.getTangentAt(progress).normalize();
     
-    // Set ship basic position
     shipGroup.position.copy(pos);
     shipGroup.lookAt(pos.clone().add(tan));
-
-    // USE TRANSLATE to keep the ship INSIDE the tube walls
-    // Translation stays relative to the ship's local direction
     shipGroup.translateX(lateral);
     
-    // Banking animation
-    body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, (keys['a']?-0.7:0) + (keys['d']?0.7:0), 0.1);
+    // Stay inside the tube floor
+    const normalDir = new THREE.Vector3(0,0,0).sub(pos).normalize();
+    shipGroup.position.add(normalDir.multiplyScalar(5));
 
-    // Camera follow
-    const camOffset = new THREE.Vector3(0, 7, -18);
+    // 3. VISUALS
+    const tilt = (keys['a']?-0.8:0) + (keys['d']?0.8:0) + (drift * 0.5);
+    shipGroup.rotation.z = THREE.MathUtils.lerp(shipGroup.rotation.z, tilt, 0.1);
+    thruster.scale.setScalar(1 + Math.random() * 0.2);
+
+    // 4. CAMERA
+    const camOffset = new THREE.Vector3(0, 6, -18);
     camOffset.applyQuaternion(shipGroup.quaternion);
-    camera.position.copy(shipGroup.position.clone().add(camOffset));
-    camera.lookAt(shipGroup.position.clone().add(tan.clone().multiplyScalar(5)));
+    const shake = (Math.random() - 0.5) * (speed * 0.06);
+    camera.position.copy(shipGroup.position.clone().add(camOffset).addScalar(shake));
+    camera.lookAt(shipGroup.position.clone().add(tan.multiplyScalar(10)));
 
-    // UI update
-    const speedEl = document.getElementById('speed-display');
-    if(speedEl) speedEl.innerText = Math.floor(speed * 400);
+    const speedUI = document.getElementById('speed-display');
+    if(speedUI) speedUI.innerText = Math.floor(speed * 450);
 
     renderer.render(scene, camera);
 }
