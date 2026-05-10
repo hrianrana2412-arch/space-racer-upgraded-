@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEON RACER - ULTIMATE</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Neon Racer">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +19,6 @@
             
             <div class="section">
                 <h3>GARAGE</h3>
-                <label style="font-size: 10px; color: #0ff;">SHIP COLOR</label>
                 <input type="color" id="shipColor" value="#00ffff">
                 <button onclick="window.setShipModel('Interceptor')">Interceptor</button>
                 <button onclick="window.setShipModel('Speeder')">Speeder</button>
@@ -23,7 +26,7 @@
             </div>
 
             <div class="section">
-                <h3>CIRCUIT SELECT</h3>
+                <h3>CIRCUITS</h3>
                 <button onclick="window.selectTrack('Neon Circuit')">Neon Circuit</button>
                 <button onclick="window.selectTrack('Hyper Loop')">Hyper Loop (Short)</button>
                 <button onclick="window.selectTrack('Deep Void')">Deep Void (Long)</button>
@@ -31,26 +34,23 @@
 
             <div class="section">
                 <button onclick="window.toggleMultiplayer()" id="multi-btn">MODE: OFFLINE</button>
-                <button onclick="window.startGame()" style="background: #0ff; color: #000; font-size: 1.2rem; margin-top: 10px;">START RACE</button>
+                <button onclick="window.startGame()" style="background: #0ff; color: #000; font-weight: 900;">START RACE</button>
             </div>
-        </div>
-        
-        <div id="right-panel">
-            <div style="color: rgba(0,255,255,0.3); letter-spacing: 5px;">PREVIEW MODE</div>
         </div>
     </div>
 
     <div id="ui-layer" class="hidden">
         <div id="speed-display">0 KM/H</div>
-        <div id="nitro-bar-container" style="position:absolute; bottom:30px; left:50%; transform:translateX(-50%); width:300px; height:8px; border:1px solid #f0f;">
-            <div id="nitro-bar" style="width:100%; height:100%; background:#f0f; box-shadow: 0 0 15px #f0f;"></div>
+        <div id="leaderboard"></div>
+        <div id="nitro-bar-container">
+            <div id="nitro-bar"></div>
         </div>
     </div>
 
     <div id="victory-screen" class="hidden">
         <h2>YOU WON</h2>
-        <p style="color: #0ff; letter-spacing: 10px;">LEGENDARY PERFORMANCE</p>
-        <button onclick="location.reload()" style="width: 200px; margin-top: 40px;">BACK TO GARAGE</button>
+        <p>LEGENDARY PERFORMANCE</p>
+        <button onclick="location.reload()">REPLAY</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
