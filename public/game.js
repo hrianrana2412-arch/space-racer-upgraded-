@@ -112,6 +112,7 @@ function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
 
+    // 1. INPUT & SPEED LOGIC
     let currentMax = keys.shift && nitro > 0 ? nitroSpeed : maxSpeed;
     
     if (keys.w) {
@@ -122,6 +123,7 @@ function animate() {
         speed -= friction;
     }
 
+    // Nitro Logic
     if (keys.shift && nitro > 0 && speed > 0.5) {
         nitro -= 0.5;
         camera.fov = THREE.MathUtils.lerp(camera.fov, 90, 0.1); 
@@ -133,20 +135,28 @@ function animate() {
     }
     camera.updateProjectionMatrix();
 
+    // Speed limits
     if (speed > currentMax) speed -= friction * 2;
     if (speed < 0) speed = 0;
 
+    // Steering
     if (keys.a) lateralOffset -= turnSpeed;
     if (keys.d) lateralOffset += turnSpeed;
     
     const maxOffset = tubeRadius - 2;
     if(lateralOffset > maxOffset) lateralOffset = maxOffset;
-    // --- STABILIZED NAVIGATION & CAMERA ---
+    if(lateralOffset < -maxOffset) lateralOffset = -maxOffset;
+
+    // 2. STABILIZED NAVIGATION
+    trackPosition += (speed * 0.0001);
+    if (trackPosition >= 1) trackPosition -= 1; 
+
     const splinePos = closedSpline.getPointAt(trackPosition);
     const splineTangent = closedSpline.getTangentAt(trackPosition).normalize();
     
-    const normal = new THREE.Vector3(0, 1, 0).applyQuaternion(shipGroup.quaternion); 
-    const binormal = new THREE.Vector3().crossVectors(splineTangent, normal).normalize();
+    // Calculate stable orientation
+    const normalVec = new THREE.Vector3(0, 1, 0).applyQuaternion(shipGroup.quaternion); 
+    const binormal = new THREE.Vector3().crossVectors(splineTangent, normalVec).normalize();
     const correctedNormal = new THREE.Vector3().crossVectors(binormal, splineTangent).normalize();
     
     const finalPos = splinePos.clone().add(binormal.clone().multiplyScalar(lateralOffset));
@@ -158,15 +168,19 @@ function animate() {
     );
     shipGroup.quaternion.slerp(targetQuaternion, 0.15);
 
+    // Visual Banking
     const bankTarget = (keys.a ? 0.7 : 0) + (keys.d ? -0.7 : 0);
     shipBody.rotation.z = THREE.MathUtils.lerp(shipBody.rotation.z, bankTarget, 0.1);
 
+    // 3. CAMERA & UI
     const cameraOffset = new THREE.Vector3(0, 5, -15);
     cameraOffset.applyQuaternion(shipGroup.quaternion);
     const targetCameraPos = shipGroup.position.clone().add(cameraOffset);
     
     camera.position.lerp(targetCameraPos, 0.1);
     camera.lookAt(shipGroup.position.clone().add(splineTangent.clone().multiplyScalar(5)));
+
+    speedUI.innerHTML = Math.floor(speed * 100) + ' <span style="font-size: 14px;">KM/H</span>';
     nitroUI.style.width = nitro + '%';
     
     updateMinimap();
