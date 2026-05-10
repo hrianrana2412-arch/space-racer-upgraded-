@@ -1,53 +1,37 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; color: #fff; }
+body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; }
 
 #game-container { position: absolute; width: 100vw; height: 100vh; z-index: 1; }
 
-/* --- SPLIT MENU LAYOUT --- */
+/* --- LEFT MENU --- */
 #menu-overlay {
-    position: absolute; width: 100%; height: 100%;
-    z-index: 100; display: flex; 
-    background: linear-gradient(90deg, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0) 100%);
+    position: absolute; width: 100%; height: 100%; z-index: 100;
+    display: flex; background: linear-gradient(90deg, rgba(0,255,255,0.1) 0%, rgba(0,0,0,0.8) 40%, rgba(0,0,0,0) 100%);
 }
 
-#left-panel {
-    width: 35%; height: 100%; display: flex; flex-direction: column;
-    justify-content: center; padding-left: 50px; pointer-events: auto;
-}
+#left-panel { width: 380px; height: 100%; padding: 40px; display: flex; flex-direction: column; justify-content: center; pointer-events: auto; }
 
-#right-panel {
-    width: 65%; height: 100%; display: flex; flex-direction: column;
-    align-items: flex-end; justify-content: flex-end; padding: 50px;
-    pointer-events: none; /* Let clicks pass to the 3D preview */
-}
-
-.menu-section {
-    background: rgba(0, 255, 255, 0.05); border-left: 4px solid #0ff;
-    padding: 20px; margin: 10px 0; width: 350px;
-}
-
-h1 { font-size: 3rem; text-shadow: 0 0 20px #0ff; margin-bottom: 30px; }
-h3 { color: #0ff; letter-spacing: 2px; margin-bottom: 10px; }
+.section { background: rgba(0, 255, 255, 0.05); border-left: 5px solid #0ff; padding: 15px; margin: 10px 0; box-shadow: -10px 0 20px rgba(0,255,255,0.1); }
+h1 { font-size: 2.8rem; color: #fff; text-shadow: 0 0 20px #0ff; margin-bottom: 20px; font-weight: 900; }
 
 button {
-    background: rgba(0,0,0,0.5); border: 1px solid #0ff; color: #0ff;
-    padding: 12px; margin: 5px 0; width: 100%; cursor: pointer;
-    transition: 0.3s; font-family: 'Orbitron';
+    background: rgba(0,0,0,0.6); border: 1px solid #0ff; color: #0ff; padding: 12px; margin: 5px 0;
+    width: 100%; cursor: pointer; font-family: 'Orbitron'; transition: 0.2s; text-align: left; padding-left: 20px;
 }
-button:hover { background: #0ff; color: #000; box-shadow: 0 0 20px #0ff; }
+button:hover { background: #0ff; color: #000; box-shadow: 0 0 20px #0ff; transform: scale(1.05); }
+input[type="color"] { width: 100%; height: 40px; margin-top: 10px; cursor: pointer; border: 1px solid #0ff; background: none; }
 
-/* --- VICTORY SCREEN --- */
-#victory-screen {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85); z-index: 200;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center;
-}
-#victory-screen h2 { font-size: 5rem; color: #ff0; text-shadow: 0 0 30px #ff0; }
-
-/* --- HUD --- */
+/* --- HUD & WIN --- */
 #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-#speed-display { position: absolute; bottom: 40px; right: 50px; font-size: 60px; color: #0ff; }
+#speed-display { position: absolute; bottom: 40px; right: 40px; font-size: 50px; color: #0ff; text-shadow: 0 0 20px #0ff; }
+
+#victory-screen {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 200;
+    background: radial-gradient(circle, rgba(0,255,255,0.2) 0%, rgba(0,0,0,0.95) 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+#victory-screen h2 { font-size: 6rem; color: #fff; text-shadow: 0 0 50px #0ff, 0 0 100px #0ff; font-weight: 900; }
+
 .hidden { display: none !important; }
