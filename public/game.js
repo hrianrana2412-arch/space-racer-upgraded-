@@ -61,18 +61,21 @@ window.generateTrack = function() {
 const bindBtn = (id, key) => {
     const el = document.getElementById(id);
     if(!el) return;
-    el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; if(navigator.vibrate) navigator.vibrate(10); }, { passive: false });
-    el.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; }, { passive: false });
+    const press = (e) => { e.preventDefault(); keys[key] = true; if(navigator.vibrate) navigator.vibrate(15); };
+    const release = (e) => { e.preventDefault(); keys[key] = false; };
+    el.addEventListener('touchstart', press, { passive: false });
+    el.addEventListener('touchend', release, { passive: false });
+    el.addEventListener('mousedown', press);
+    el.addEventListener('mouseup', release);
 };
 
 window.startGame = () => {
     document.getElementById('menu-overlay').classList.add('hidden');
     document.getElementById('ui-layer').classList.remove('hidden');
-    
     if (navigator.vibrate) navigator.vibrate(50);
     const docElm = document.documentElement;
     if (docElm.requestFullscreen) docElm.requestFullscreen();
-    
+
     bindBtn('btn-left', 'a'); bindBtn('btn-right', 'd');
     bindBtn('btn-gas', 'w'); bindBtn('btn-nitro', 'shift');
     gameActive = true;
@@ -84,17 +87,17 @@ function animate() {
         shipGroup.rotation.y += 0.01;
         camera.position.set(15, 10, 35); camera.lookAt(0,0,0);
     } else {
-        const isNitro = keys['shift'] && nitro > 0;
-        speed = Math.max(0, Math.min(speed + (keys['w'] || keys['arrowup'] ? 0.012 : -0.018), isNitro ? 3.8 : 2.0));
-        if (keys['a'] || keys['arrowleft']) lateral -= 1.6;
-        if (keys['d'] || keys['arrowright']) lateral += 1.6;
+        const isNitro = (keys['shift'] || keys['Shift']) && nitro > 0;
+        speed = Math.max(0, Math.min(speed + (keys['w'] || keys['arrowup'] ? 0.015 : -0.018), isNitro ? 4.2 : 2.2));
+        
+        if (keys['a'] || keys['arrowleft']) lateral -= 2.0;
+        if (keys['d'] || keys['arrowright']) lateral += 2.0;
         lateral = Math.max(-60, Math.min(60));
 
         progress += speed * 0.0005;
         if(progress > 1) { 
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            document.getElementById('victory-screen').classList.remove('hidden'); 
-            gameActive = false; 
+            location.reload(); 
         }
 
         const p = curve.getPointAt(progress);
@@ -106,7 +109,17 @@ function animate() {
         camera.lookAt(shipGroup.position);
         
         document.getElementById('speed-display').innerText = Math.floor(speed * 480) + " KM/H";
-        if(isNitro) nitro -= 0.5; else if(nitro < 100) nitro += 0.1;
+        document.getElementById('nitro-bar').style.width = nitro + "%";
+        if(isNitro) { 
+            nitro -= 0.6; 
+            thruster.scale.set(2, 2, 2); 
+            camera.fov = THREE.MathUtils.lerp(camera.fov, 90, 0.1);
+        } else { 
+            if(nitro < 100) nitro += 0.2; 
+            thruster.scale.set(1, 1, 1); 
+            camera.fov = THREE.MathUtils.lerp(camera.fov, 75, 0.1);
+        }
+        camera.updateProjectionMatrix();
     }
     renderer.render(scene, camera);
 }
