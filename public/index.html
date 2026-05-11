@@ -17,16 +17,13 @@
                 <div class="grid">
                     <button onclick="window.setShip('Interceptor')">Interceptor</button>
                     <button onclick="window.setShip('Speeder')">Speeder</button>
-                    <button onclick="window.setShip('Tanker')">Tanker</button>
                     <button onclick="window.setShip('Vanguard')">Vanguard</button>
-                    <button onclick="window.setShip('Phantom')">Phantom</button>
                     <button onclick="window.setShip('Zenith')">Zenith</button>
                 </div>
             </div>
             <div class="section">
-                <h3>SELECT TRACK</h3>
-                <div class="grid" id="track-list">
-                    </div>
+                <h3>SECTOR SELECT</h3>
+                <div class="grid" id="track-list"></div>
             </div>
             <button onclick="window.startGame()" id="start-btn">START RACE</button>
         </div>
@@ -44,6 +41,15 @@
             <button class="game-btn gas-btn" id="btn-gas">GAS</button>
         </div>
     </div>
+
+    <div id="win-screen" class="hidden">
+        <div class="win-content">
+            <h2 class="glow-text">VICTORY</h2>
+            <p>RACE COMPLETED</p>
+            <button onclick="location.reload()" class="retry-btn">REPLAY</button>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="game.js"></script>
 </body>
