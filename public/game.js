@@ -5,7 +5,6 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.getElementById('game-container').appendChild(renderer.domElement);
 
 let speed = 0, progress = 0, lateral = 0, nitro = 100, gameActive = false;
-let currentTrack = 'Neon Circuit';
 let shipSettings = { color: "#00ffff", model: 'Interceptor' };
 let curve, tubeMesh, shipBody, thruster;
 const shipGroup = new THREE.Group();
@@ -43,7 +42,6 @@ window.buildShip = function() {
     scene.add(shipGroup);
 }
 
-window.selectTrack = (name) => { currentTrack = name; window.generateTrack(); };
 window.generateTrack = function() {
     if(tubeMesh) scene.remove(tubeMesh);
     const pts = [];
@@ -54,80 +52,105 @@ window.generateTrack = function() {
     }
     curve = new THREE.CatmullRomCurve3(pts);
     curve.closed = true;
-    tubeMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 100, 65, 12, true), new THREE.MeshStandardMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.3}));
+    tubeMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 100, 70, 12, true), new THREE.MeshStandardMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.3}));
     scene.add(tubeMesh);
 }
 
+// --- HARDENED CONTROLS ---
 const bindBtn = (id, key) => {
     const el = document.getElementById(id);
     if(!el) return;
-    const press = (e) => { e.preventDefault(); keys[key] = true; if(navigator.vibrate) navigator.vibrate(15); };
-    const release = (e) => { e.preventDefault(); keys[key] = false; };
-    el.addEventListener('touchstart', press, { passive: false });
-    el.addEventListener('touchend', release, { passive: false });
-    el.addEventListener('mousedown', press);
-    el.addEventListener('mouseup', release);
+
+    const start = (e) => { e.preventDefault(); keys[key] = true; };
+    const end = (e) => { e.preventDefault(); keys[key] = false; };
+
+    el.addEventListener('touchstart', start, { passive: false });
+    el.addEventListener('touchend', end, { passive: false });
+    el.addEventListener('mousedown', start);
+    el.addEventListener('mouseup', end);
+    el.addEventListener('mouseleave', end);
 };
 
 window.startGame = () => {
+    window.generateTrack();
     document.getElementById('menu-overlay').classList.add('hidden');
     document.getElementById('ui-layer').classList.remove('hidden');
-    if (navigator.vibrate) navigator.vibrate(50);
-    const docElm = document.documentElement;
-    if (docElm.requestFullscreen) docElm.requestFullscreen();
-
-    bindBtn('btn-left', 'a'); bindBtn('btn-right', 'd');
-    bindBtn('btn-gas', 'w'); bindBtn('btn-nitro', 'shift');
+    
+    // Explicitly bind with lowercase keys
+    bindBtn('btn-left', 'a'); 
+    bindBtn('btn-right', 'd');
+    bindBtn('btn-gas', 'w'); 
+    bindBtn('btn-nitro', 'shift');
+    
     gameActive = true;
 };
 
 function animate() {
     requestAnimationFrame(animate);
+    
     if(!gameActive) {
         shipGroup.rotation.y += 0.01;
         camera.position.set(15, 10, 35); camera.lookAt(0,0,0);
-    } else {
-        const isNitro = (keys['shift'] || keys['Shift']) && nitro > 0;
-        speed = Math.max(0, Math.min(speed + (keys['w'] || keys['arrowup'] ? 0.015 : -0.018), isNitro ? 4.2 : 2.2));
-        
-        if (keys['a'] || keys['arrowleft']) lateral -= 2.0;
-        if (keys['d'] || keys['arrowright']) lateral += 2.0;
-        lateral = Math.max(-60, Math.min(60));
-
-        progress += speed * 0.0005;
-        if(progress > 1) { 
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            location.reload(); 
-        }
-
-        const p = curve.getPointAt(progress);
-        shipGroup.position.copy(p);
-        shipGroup.lookAt(curve.getPointAt((progress + 0.01) % 1));
-        shipGroup.translateX(lateral); shipGroup.translateY(-28);
-
-        camera.position.lerp(new THREE.Vector3(0,14,-35).applyQuaternion(shipGroup.quaternion).add(shipGroup.position), 0.15);
-        camera.lookAt(shipGroup.position);
-        
-        document.getElementById('speed-display').innerText = Math.floor(speed * 480) + " KM/H";
-        document.getElementById('nitro-bar').style.width = nitro + "%";
-        if(isNitro) { 
-            nitro -= 0.6; 
-            thruster.scale.set(2, 2, 2); 
-            camera.fov = THREE.MathUtils.lerp(camera.fov, 90, 0.1);
-        } else { 
-            if(nitro < 100) nitro += 0.2; 
-            thruster.scale.set(1, 1, 1); 
-            camera.fov = THREE.MathUtils.lerp(camera.fov, 75, 0.1);
-        }
-        camera.updateProjectionMatrix();
+        renderer.render(scene, camera);
+        return;
     }
+
+    if(!curve) return;
+
+    // Movement Logic
+    const isNitro = (keys['shift'] || keys['Shift']) && nitro > 0;
+    speed = Math.max(0, Math.min(speed + (keys['w'] ? 0.02 : -0.02), isNitro ? 4.5 : 2.5));
+    
+    // Steering Logic (Direct Offset)
+    if (keys['a']) lateral -= 2.5;
+    if (keys['d']) lateral += 2.5;
+    lateral = Math.max(-65, Math.min(65, lateral));
+
+    progress += speed * 0.0005;
+    if(progress > 1) progress = 0;
+
+    const p = curve.getPointAt(progress % 1);
+    const look = curve.getPointAt((progress + 0.01) % 1);
+    
+    if(p && look) {
+        shipGroup.position.copy(p);
+        shipGroup.lookAt(look);
+
+        // This is the new stable steering method
+        const right = new THREE.Vector3().setFromMatrixColumn(shipGroup.matrix, 0);
+        shipGroup.position.addScaledVector(right, lateral);
+        
+        // Push ship down into the tube
+        const down = new THREE.Vector3(0, -1, 0).applyQuaternion(shipGroup.quaternion);
+        shipGroup.position.addScaledVector(down, 30);
+
+        // Camera follow
+        const camOffset = new THREE.Vector3(0, 15, -40).applyQuaternion(shipGroup.quaternion);
+        camera.position.copy(shipGroup.position).add(camOffset);
+        camera.lookAt(shipGroup.position);
+    }
+    
+    // UI Updates
+    document.getElementById('speed-display').innerText = Math.floor(speed * 480) + " KM/H";
+    const nBar = document.getElementById('nitro-bar');
+    if(nBar) nBar.style.width = nitro + "%";
+    
+    if(isNitro) {
+        nitro -= 0.8; 
+        if(thruster) thruster.scale.set(2.5, 2.5, 2.5);
+    } else {
+        if(nitro < 100) nitro += 0.25; 
+        if(thruster) thruster.scale.set(1, 1, 1);
+    }
+
     renderer.render(scene, camera);
 }
 
+// PC Support
 window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
 window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 
 document.getElementById('shipColor').oninput = (e) => { shipSettings.color = e.target.value; window.buildShip(); };
 window.setShipModel = (m) => { shipSettings.model = m; window.buildShip(); };
 
-initWorld(); window.generateTrack(); window.buildShip(); animate();
+initWorld(); window.buildShip(); animate();
