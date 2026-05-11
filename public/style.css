@@ -3,21 +3,21 @@
 body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; color: #fff; }
 #game-container { position: absolute; width: 100%; height: 100%; z-index: 1; }
 #menu-overlay { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; background: rgba(0,0,0,0.85); }
-#left-panel { width: 400px; padding: 25px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
+#left-panel { width: 420px; padding: 25px; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
 .section { background: rgba(0,255,255,0.1); border-left: 4px solid #0ff; padding: 12px; margin: 8px 0; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
-h1 { text-shadow: 0 0 15px #0ff; margin-bottom: 10px; font-size: 2rem; }
-button { background: rgba(0,0,0,0.7); border: 1px solid #0ff; color: #0ff; padding: 8px; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; }
-button:hover { background: #0ff; color: #000; }
-#start-btn { background: #0ff; color: #000; font-weight: 900; font-size: 1.2rem; height: 60px; margin-top: 10px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px; }
+h1 { text-shadow: 0 0 15px #0ff; margin-bottom: 10px; font-size: 2.2rem; }
+button { background: rgba(0,0,0,0.7); border: 1px solid #0ff; color: #0ff; padding: 10px; cursor: pointer; font-family: 'Orbitron'; font-size: 11px; transition: 0.3s; }
+button:hover { background: #0ff; color: #000; box-shadow: 0 0 15px #0ff; }
+#start-btn { background: #0ff; color: #000; font-weight: 900; font-size: 1.4rem; height: 60px; margin-top: 15px; }
 #ui-layer { position: absolute; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
 #speed-display { position: absolute; top: 20px; width: 100%; text-align: center; font-size: 30px; color: #0ff; }
-#nitro-ui { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 200px; height: 10px; border: 1px solid #f0f; }
-#nitro-bar { width: 100%; height: 100%; background: #f0f; box-shadow: 0 0 10px #f0f; }
-.control-group { position: absolute; bottom: 30px; display: flex; gap: 15px; pointer-events: auto; }
-#steering-controls { left: 20px; }
-#action-controls { right: 20px; }
-.game-btn { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #0ff; color: #fff; font-size: 20px; }
-.gas-btn { border-color: #0f0; color: #0f0; width: 90px; height: 90px; }
-.nitro-btn { border-color: #f0f; color: #f0f; width: 60px; height: 60px; font-size: 10px; }
+#nitro-ui { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 220px; height: 12px; border: 1px solid #f0f; }
+#nitro-bar { width: 100%; height: 100%; background: #f0f; box-shadow: 0 0 15px #f0f; }
+.control-group { position: absolute; bottom: 40px; display: flex; gap: 20px; pointer-events: auto; }
+#steering-controls { left: 40px; }
+#action-controls { right: 40px; }
+.game-btn { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #0ff; color: #fff; font-size: 24px; background: rgba(0,255,255,0.1); }
+.gas-btn { border-color: #0f0; color: #0f0; width: 110px; height: 110px; }
+.nitro-btn { border-color: #f0f; color: #f0f; width: 70px; height: 70px; font-size: 12px; }
 .hidden { display: none !important; }
