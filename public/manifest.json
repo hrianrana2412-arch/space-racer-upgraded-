@@ -1,0 +1,17 @@
+{
+  "short_name": "NeonRacer",
+  "name": "Neon Space Racer: Titan Edition",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1165/1165230.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#00ffff",
+  "background_color": "#000000",
+  "orientation": "landscape"
+}
