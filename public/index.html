@@ -3,17 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>NEON RACER - TITAN</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffff">
-    <meta name="mobile-web-app-capable" content="yes">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Neon Racer">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -40,10 +34,15 @@
 
     <div id="ui-layer" class="hidden">
         <div id="speed-display">0 KM/H</div>
+        <div id="nitro-ui-container">
+             <div id="nitro-bar"></div>
+        </div>
+        
         <div class="control-group" id="steering-controls">
             <button class="game-btn" id="btn-left">◀</button>
             <button class="game-btn" id="btn-right">▶</button>
         </div>
+
         <div class="control-group" id="action-controls">
             <button class="game-btn nitro-btn" id="btn-nitro">NITRO</button>
             <button class="game-btn gas-btn" id="btn-gas">GAS</button>
@@ -52,7 +51,7 @@
 
     <div id="victory-screen" class="hidden">
         <h2>YOU WON</h2>
-        <button onclick="location.reload()">PLAY AGAIN</button>
+        <button onclick="location.reload()">REPLAY</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
