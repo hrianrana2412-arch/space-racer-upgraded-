@@ -1,41 +1,38 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-* { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-user-select: none; user-select: none; }
-body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; }
+* { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-user-select: none; }
+body { background: #000; font-family: 'Orbitron', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
 
-/* LANDSCAPE MESSAGE */
-#landscape-message {
-    display: none; position: fixed; z-index: 10000; background: #000; color: #0ff;
-    width: 100vw; height: 100vh; text-align: center; padding-top: 40vh; font-weight: 900;
-}
-@media screen and (orientation: portrait) { #landscape-message { display: block; } }
+#landscape-lock { display: none; position: fixed; z-index: 9999; background: #000; color: #0ff; width: 100%; height: 100%; text-align: center; padding-top: 45vh; }
+@media screen and (orientation: portrait) { #landscape-lock { display: block; } }
 
-#splash-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 1s; }
-.logo-text { font-size: 3rem; color: #fff; text-shadow: 0 0 20px #0ff; line-height: 1; }
-.logo-text span { color: #f0f; text-shadow: 0 0 20px #f0f; }
-#loading-progress { width: 0%; height: 4px; background: #0ff; box-shadow: 0 0 10px #0ff; transition: 0.3s; }
-.fade-out { opacity: 0; pointer-events: none; }
+#splash-screen { position: fixed; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.8s; }
+.logo { font-size: 3rem; color: #fff; text-shadow: 0 0 20px #0ff; }
+.logo span { color: #f0f; }
+.loader { width: 200px; height: 4px; background: #222; margin-top: 20px; }
+#load-fill { width: 0%; height: 100%; background: #0ff; transition: 0.2s; }
 
-#menu-overlay { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; background: rgba(0,0,0,0.85); }
-#left-panel { width: 350px; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
-@media (max-width: 768px) { #left-panel { width: 100%; align-items: center; background: rgba(0,0,0,0.95); } }
+#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: rgba(0,0,0,0.8); }
+.panel { width: 350px; padding: 30px; display: flex; flex-direction: column; justify-content: center; }
+@media (max-width: 700px) { .panel { width: 100%; align-items: center; } }
+.box { background: rgba(0,255,255,0.1); border-left: 4px solid #0ff; padding: 15px; margin: 10px 0; width: 100%; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+button { background: #111; border: 1px solid #0ff; color: #0ff; padding: 12px; font-family: 'Orbitron'; cursor: pointer; border-radius: 4px; transition: 0.2s; }
+button:active { background: #0ff; color: #000; }
+.start-big { background: #0ff; color: #000; font-weight: 900; font-size: 1.5rem; margin-top: 20px; border: none; width: 100%; height: 60px; }
 
-.section { background: rgba(0,255,255,0.1); border-left: 4px solid #0ff; padding: 10px; margin: 5px 0; width: 100%; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-button { background: rgba(255,255,255,0.05); border: 1px solid #0ff; color: #0ff; padding: 10px; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; }
-#start-btn { background: #0ff !important; color: #000 !important; font-weight: 900; font-size: 1.2rem; height: 50px; margin-top: 10px; }
+#ui-layer { position: absolute; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
+#lb { position: absolute; top: 20px; left: 20px; font-size: 11px; color: #fff; background: rgba(0,255,255,0.1); padding: 15px; border-radius: 0 15px 15px 0; border-left: 4px solid #0ff; backdrop-filter: blur(5px); }
+#speedo { position: absolute; bottom: 100px; right: 40px; font-size: 55px; font-weight: 900; font-style: italic; text-shadow: 0 0 20px #0ff; color: #fff; }
+#speedo span { font-size: 18px; margin-left: 5px; color: #0ff; }
+#nitro-gauge { position: absolute; bottom: 90px; right: 40px; width: 200px; height: 8px; background: #222; border: 1px solid #f0f; }
+#nitro-fill { width: 100%; height: 100%; background: #f0f; box-shadow: 0 0 15px #f0f; }
 
-#leaderboard { position: absolute; top: 20px; left: 20px; border-left: 3px solid #0ff; padding-left: 10px; background: rgba(0,0,0,0.4); z-index: 60; }
-.lb-row { font-size: 11px; margin: 2px 0; color: #aaa; }
-#rank-player { color: #0ff; font-weight: 900; }
+.controls-left, .controls-right { position: absolute; bottom: 30px; display: flex; gap: 20px; pointer-events: auto; }
+.controls-left { left: 30px; }
+.controls-right { right: 30px; align-items: flex-end; }
+.btn-circle { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #0ff; font-size: 25px; background: rgba(0,255,255,0.1); color: #fff; }
+.btn-rect { width: 110px; height: 65px; border-radius: 12px; border: 3px solid #0f0; background: rgba(0,255,255,0.05); color: #0f0; font-weight: 900; }
+.nitro { border-color: #f0f; color: #f0f; margin-bottom: 10px; height: 55px; }
 
-#speed-display { position: absolute; bottom: 120px; right: 30px; font-size: 50px; color: #fff; text-shadow: 0 0 20px #0ff; font-style: italic; }
-#nitro-bar { width: 100%; height: 6px; background: #f0f; box-shadow: 0 0 15px #f0f; }
-#nitro-ui-container { position: absolute; bottom: 110px; right: 30px; width: 200px; border: 1px solid #f0f; }
-
-.control-group { position: absolute; bottom: 30px; display: flex; gap: 15px; pointer-events: auto; }
-#steering-controls { left: 20px; }
-#action-controls { right: 20px; align-items: flex-end; }
-.game-btn { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #0ff; color: #fff; background: rgba(255,255,255,0.1); font-size: 24px; }
-.gas-btn { width: 110px; height: 110px; border-color: #0f0; color: #0f0; border-radius: 20px; }
-.nitro-btn { width: 70px; height: 70px; border-color: #f0f; color: #f0f; font-size: 12px; margin-bottom: 5px; }
 .hidden { display: none !important; }
+.fade { opacity: 0; pointer-events: none; }
