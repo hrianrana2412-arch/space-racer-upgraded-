@@ -1,36 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-user-select: none; }
-body { background: #000; font-family: 'Orbitron', sans-serif; overflow: hidden; height: 100vh; }
+body { background: #000; font-family: 'Orbitron', sans-serif; overflow: hidden; height: 100vh; color: #fff; }
+
+/* THE BRIGHTNESS LOGO */
+.logo-bright { font-size: 3.5rem; font-weight: 900; color: #fff; text-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff; animation: pulse 2s infinite; }
+.logo-bright span { color: #f0f; text-shadow: 0 0 10px #f0f, 0 0 20px #f0f; }
+
+@keyframes pulse { 0%, 100% { filter: brightness(1); transform: scale(1); } 50% { filter: brightness(1.5); transform: scale(1.02); } }
 
 #landscape-lock { display: none; position: fixed; z-index: 9999; background: #000; color: #0ff; width: 100%; height: 100%; text-align: center; padding-top: 45vh; }
 @media screen and (orientation: portrait) { #landscape-lock { display: block; } }
 
-#splash-screen { position: fixed; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.8s; }
-.logo { font-size: 3rem; color: #fff; text-shadow: 0 0 20px #0ff; }
-.logo span { color: #f0f; }
-.loader { width: 200px; height: 4px; background: #222; margin-top: 20px; }
-#load-fill { width: 0%; height: 100%; background: #0ff; transition: 0.2s; }
+#splash-screen { position: fixed; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 1s; }
+.loader { width: 250px; height: 2px; background: #111; margin-top: 20px; border: 1px solid #333; }
+#load-fill { width: 0%; height: 100%; background: #0ff; box-shadow: 0 0 10px #0ff; }
 
-#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
-.panel { width: 350px; text-align: center; }
-.box { background: rgba(0,255,255,0.1); border-left: 4px solid #0ff; padding: 15px; margin: 15px 0; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-button { background: #111; border: 1px solid #0ff; color: #0ff; padding: 10px; font-family: 'Orbitron'; cursor: pointer; }
-.start-big { background: #0ff; color: #000; font-weight: 900; font-size: 1.5rem; width: 100%; height: 60px; border: none; box-shadow: 0 0 20px #0ff; }
+#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: radial-gradient(circle, rgba(0,20,30,0.8) 0%, #000 100%); align-items: center; justify-content: center; }
+.panel { width: 400px; text-align: center; background: rgba(255,255,255,0.03); padding: 40px; border-radius: 20px; border: 1px solid rgba(0,255,255,0.2); backdrop-filter: blur(10px); }
+.box { margin: 25px 0; }
+.grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+button { background: rgba(0,0,0,0.6); border: 1px solid #0ff; color: #0ff; padding: 12px 5px; font-family: 'Orbitron'; cursor: pointer; font-size: 10px; transition: 0.3s; }
+button:active { background: #0ff; color: #000; }
+.start-big { background: linear-gradient(90deg, #0ff, #00ffff); color: #000; font-weight: 900; font-size: 1.4rem; width: 100%; height: 65px; border: none; border-radius: 8px; box-shadow: 0 0 30px rgba(0,255,255,0.5); }
 
 #ui-layer { position: absolute; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-#lb { position: absolute; top: 20px; left: 20px; font-size: 11px; color: #fff; background: rgba(0,255,255,0.2); padding: 10px; border-left: 3px solid #0ff; }
-#speedo { position: absolute; bottom: 120px; right: 40px; font-size: 50px; font-weight: 900; color: #fff; text-shadow: 0 0 20px #0ff; font-style: italic; }
-#speedo span { font-size: 18px; margin-left: 5px; color: #0ff; }
-#nitro-gauge { position: absolute; bottom: 110px; right: 40px; width: 200px; height: 8px; background: #222; border: 1px solid #f0f; }
-#nitro-fill { width: 100%; height: 100%; background: #f0f; box-shadow: 0 0 15px #f0f; }
+#lb { position: absolute; top: 30px; left: 30px; font-size: 10px; background: rgba(0,0,0,0.5); padding: 15px; border-left: 5px solid #f0f; backdrop-filter: blur(5px); }
+#speedo { position: absolute; bottom: 130px; right: 50px; font-size: 65px; font-weight: 900; font-style: italic; color: #fff; text-shadow: 0 0 25px #0ff; }
+#speedo span { font-size: 20px; margin-left: 8px; color: #0ff; opacity: 0.7; }
+#nitro-gauge { position: absolute; bottom: 115px; right: 55px; width: 220px; height: 10px; background: #111; border: 1px solid #f0f; overflow: hidden; transform: skewX(-20deg); }
+#nitro-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #f0f, #ff00ff); box-shadow: 0 0 20px #f0f; }
 
-.controls-left, .controls-right { position: absolute; bottom: 30px; display: flex; gap: 20px; pointer-events: auto; }
-.controls-left { left: 30px; }
-.controls-right { right: 30px; align-items: flex-end; flex-direction: column; }
-.btn-circle { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #0ff; color: #fff; background: rgba(0,255,255,0.1); font-size: 20px; }
-.btn-rect { width: 110px; height: 60px; border-radius: 10px; border: 3px solid #0f0; color: #0f0; background: rgba(0,0,0,0.5); font-weight: 900; }
-.nitro { border-color: #f0f; color: #f0f; height: 50px; margin-bottom: 5px; }
+.controls-left, .controls-right { position: absolute; bottom: 40px; display: flex; gap: 25px; pointer-events: auto; }
+.controls-left { left: 40px; }
+.controls-right { right: 40px; align-items: flex-end; flex-direction: column; }
+.btn-circle { width: 95px; height: 95px; border-radius: 50%; border: 4px solid #0ff; color: #fff; background: rgba(0,255,255,0.05); font-size: 28px; backdrop-filter: blur(2px); }
+.btn-rect { width: 130px; height: 75px; border-radius: 15px; border: 4px solid #0f0; color: #0f0; background: rgba(0,0,0,0.6); font-weight: 900; font-size: 18px; }
+.nitro { border-color: #f0f; color: #f0f; height: 60px; margin-bottom: 10px; }
 
 .hidden { display: none !important; }
 .fade { opacity: 0; pointer-events: none; }
