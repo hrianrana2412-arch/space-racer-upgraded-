@@ -2,7 +2,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 30000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(window.devicePixelRatio);
 document.getElementById('game-container').appendChild(renderer.domElement);
 
 let speed = 0, progress = 0, lateral = 0, nitro = 100, gameActive = false;
@@ -17,8 +17,7 @@ function initWorld() {
     scene.background = new THREE.Color(0x000005);
     scene.add(new THREE.AmbientLight(0xffffff, 1.8)); 
     const pLight = new THREE.PointLight(0xffffff, 3, 10000);
-    pLight.position.set(200, 500, 200);
-    scene.add(pLight);
+    pLight.position.set(200, 500, 200); scene.add(pLight);
 
     const starGeo = new THREE.BufferGeometry();
     const starPos = [];
@@ -41,13 +40,13 @@ window.buildShip = function() {
     const hull = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 4), mat); shipGroup.add(hull);
     const glass = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 1.2), new THREE.MeshBasicMaterial({color: 0x000000}));
     glass.position.set(0, 0.35, 0.5); shipGroup.add(glass);
-
-    if (shipSettings.model === 'Vanguard') {
-        const wing = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, 2), mat); wing.position.set(0, 0, -0.5); shipGroup.add(wing);
-    } else if (shipSettings.model === 'Zenith') {
+    
+    if (shipSettings.model === 'Zenith') {
         const fin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.5, 1.5), mat); fin.position.z = -1; shipGroup.add(fin);
     } else if (shipSettings.model === 'Phantom') {
         const ring = new THREE.Mesh(new THREE.TorusGeometry(1.8, 0.1, 8, 30), mat); ring.rotation.y = 1.57; shipGroup.add(ring);
+    } else {
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(4, 0.1, 2), mat); wing.position.set(0, 0, -0.5); shipGroup.add(wing);
     }
     
     thruster = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.6, 0.6), new THREE.MeshBasicMaterial({color: 0x00ffff}));
@@ -55,9 +54,9 @@ window.buildShip = function() {
     scene.add(shipGroup);
 }
 
-window.generateTrack = function(id = 1) {
+window.generateTrack = function() {
     if(tubeMesh) scene.remove(tubeMesh);
-    const pts = []; let r = 400 + (id * 50);
+    const pts = []; let r = 400;
     for (let i = 0; i <= 100; i++) {
         const t = (i / 100) * Math.PI * 2;
         pts.push(new THREE.Vector3(r*(2+Math.cos(3*t))*Math.cos(2*t), r*(2+Math.cos(3*t))*Math.sin(2*t), r*Math.sin(3*t)));
@@ -70,17 +69,16 @@ window.generateTrack = function(id = 1) {
 const bind = (id, k) => {
     const el = document.getElementById(id);
     if(!el) return;
-    el.ontouchstart = (e) => { e.preventDefault(); keys[k] = true; };
-    el.ontouchend = () => keys[k] = false;
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[k] = true; }, {passive:false});
+    el.addEventListener('touchend', () => keys[k] = false);
+    el.addEventListener('mousedown', () => keys[k] = true);
+    el.addEventListener('mouseup', () => keys[k] = false);
 };
 
 window.startGame = () => {
     document.getElementById('menu-overlay').classList.add('hidden');
     document.getElementById('ui-layer').classList.remove('hidden');
-    
-    // Bind buttons ONLY after they are visible in HUD
     bind('l-btn', 'a'); bind('r-btn', 'd'); bind('g-btn', 'w'); bind('n-btn', 'shift');
-
     bots.forEach(b => scene.remove(b.mesh)); bots = [];
     for(let i=0; i<4; i++) {
         const b = new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 8), new THREE.MeshStandardMaterial({color: 0xff0044, emissive: 0xff0000}));
@@ -106,13 +104,12 @@ function animate() {
 
         const p = curve.getPointAt(progress % 1);
         const look = curve.getPointAt((progress + 0.01) % 1);
-        
         if(p && look) {
             shipGroup.position.copy(p); shipGroup.lookAt(look); shipGroup.rotation.z = tilt;
             const right = new THREE.Vector3().setFromMatrixColumn(shipGroup.matrix, 0);
             shipGroup.position.addScaledVector(right, -lateral);
             const down = new THREE.Vector3(0, -1, 0).applyQuaternion(shipGroup.quaternion);
-            shipGroup.position.addScaledVector(down, 42);
+            shipGroup.position.addScaledVector(down, 42); // FORCED LOCK TO TRACK
 
             const camOffset = new THREE.Vector3(0, 14, -48).applyQuaternion(shipGroup.quaternion);
             camera.position.copy(shipGroup.position).add(camOffset);
@@ -141,11 +138,8 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
-window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
-
 window.onload = () => {
-    initWorld(); window.generateTrack(1); window.buildShip();
+    initWorld(); window.generateTrack(); window.buildShip();
     let w = 0; const f = document.getElementById('load-fill');
     const iv = setInterval(() => { w+=10; f.style.width = w+'%'; if(w>=100){ clearInterval(iv); document.getElementById('splash-screen').classList.add('fade'); } }, 100);
 };
