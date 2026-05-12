@@ -1,50 +1,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
-
 * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-user-select: none; }
 body { background: #000; font-family: 'Orbitron', sans-serif; overflow: hidden; height: 100vh; color: #fff; }
 
 /* THE BRIGHTNESS LOGO */
-.logo-bright { 
-    font-size: 3.5rem; 
-    font-weight: 900; 
-    color: #fff; 
-    text-shadow: 0 0 10px #0ff, 0 0 30px #0ff, 0 0 60px #0ff; 
-    animation: neon-glow 1.5s infinite alternate; 
-}
-.logo-bright span { color: #f0f; text-shadow: 0 0 10px #f0f, 0 0 40px #f0f; }
+.logo-bright { font-size: 3.5rem; font-weight: 900; color: #fff; text-shadow: 0 0 10px #0ff, 0 0 30px #0ff, 0 0 60px #0ff; animation: pulse 2s infinite; }
+.logo-bright span { color: #f0f; text-shadow: 0 0 10px #f0f, 0 0 30px #f0f; }
 
-@keyframes neon-glow {
-    from { filter: brightness(1); transform: scale(1); }
-    to { filter: brightness(1.7); transform: scale(1.03); }
-}
+@keyframes pulse { 0%, 100% { filter: brightness(1); transform: scale(1); } 50% { filter: brightness(1.6); transform: scale(1.02); } }
 
-#landscape-lock { display: none; position: fixed; z-index: 9999; background: #000; color: #0ff; width: 100%; height: 100%; text-align: center; padding-top: 45vh; }
+#landscape-lock { display: none; position: fixed; z-index: 999; background: #000; color: #0ff; width: 100%; height: 100%; text-align: center; padding-top: 45vh; }
 @media screen and (orientation: portrait) { #landscape-lock { display: block; } }
 
-#splash-screen { position: fixed; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 1s; }
-.loader { width: 250px; height: 4px; background: #111; margin-top: 20px; border-radius: 2px; }
-#load-fill { width: 0%; height: 100%; background: #0ff; box-shadow: 0 0 15px #0ff; transition: 0.2s; }
+#splash-screen { position: fixed; width: 100%; height: 100%; background: #000; z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 1s; }
+.loader { width: 200px; height: 2px; background: #222; margin-top: 20px; border-radius: 2px; }
+#load-fill { width: 0%; height: 100%; background: #0ff; box-shadow: 0 0 10px #0ff; }
 
-#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
-.panel { width: 400px; text-align: center; background: rgba(255,255,255,0.03); padding: 40px; border-radius: 20px; border: 1px solid rgba(0,255,255,0.2); backdrop-filter: blur(15px); }
-.box { margin: 25px 0; }
-.grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-button { background: #000; border: 1px solid #0ff; color: #0ff; padding: 12px; font-family: 'Orbitron'; cursor: pointer; font-size: 10px; }
-.start-big { background: linear-gradient(90deg, #0ff, #00ffff); color: #000; font-weight: 900; font-size: 1.4rem; width: 100%; height: 65px; border: none; box-shadow: 0 0 30px rgba(0,255,255,0.5); border-radius: 10px; cursor: pointer; }
+#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+.panel { width: 400px; text-align: center; background: rgba(255,255,255,0.02); padding: 40px; border: 1px solid rgba(0,255,255,0.2); backdrop-filter: blur(20px); border-radius: 20px; }
+.ship-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
+button { background: #000; border: 1px solid #0ff; color: #0ff; padding: 10px; font-family: 'Orbitron'; cursor: pointer; font-size: 9px; }
+.btn-main { background: linear-gradient(90deg, #0ff, #0088ff); color: #000; width: 100%; height: 60px; font-weight: 900; font-size: 1.2rem; border: none; border-radius: 10px; box-shadow: 0 0 30px rgba(0,255,255,0.4); }
 
 #ui-layer { position: absolute; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-#lb { position: absolute; top: 30px; left: 30px; font-size: 10px; background: rgba(0,0,0,0.5); padding: 15px; border-left: 5px solid #f0f; }
-#speedo { position: absolute; bottom: 130px; right: 50px; font-size: 65px; font-weight: 900; font-style: italic; color: #fff; text-shadow: 0 0 25px #0ff; }
-#speedo span { font-size: 20px; color: #0ff; margin-left: 5px; }
-#nitro-gauge { position: absolute; bottom: 115px; right: 55px; width: 220px; height: 10px; background: #111; border: 1px solid #f0f; transform: skewX(-20deg); overflow: hidden; }
-#nitro-fill { width: 100%; height: 100%; background: #f0f; box-shadow: 0 0 20px #f0f; }
+#hud-top { position: absolute; top: 20px; left: 20px; font-size: 14px; color: #f0f; }
+#speedo { position: absolute; bottom: 120px; right: 40px; font-size: 60px; font-weight: 900; font-style: italic; text-shadow: 0 0 20px #0ff; }
+#speedo span { font-size: 18px; margin-left: 5px; color: #0ff; }
+#nitro-bar { position: absolute; bottom: 110px; right: 45px; width: 200px; height: 8px; background: #111; border: 1px solid #f0f; transform: skewX(-20deg); overflow: hidden; }
+#nitro-fill { width: 100%; height: 100%; background: #f0f; box-shadow: 0 0 15px #f0f; }
 
-.controls-left, .controls-right { position: absolute; bottom: 40px; display: flex; gap: 20px; pointer-events: auto; }
-.controls-left { left: 40px; }
-.controls-right { right: 40px; align-items: flex-end; flex-direction: column; }
-.btn-circle { width: 90px; height: 90px; border-radius: 50%; border: 4px solid #0ff; color: #fff; background: rgba(0,255,255,0.1); font-size: 24px; }
-.btn-rect { width: 130px; height: 75px; border-radius: 15px; border: 4px solid #0f0; color: #0f0; background: rgba(0,0,0,0.6); font-weight: 900; font-size: 18px; }
-.nitro { border-color: #f0f; color: #f0f; height: 60px; margin-bottom: 10px; }
-
-.hidden { display: none !important; }
-.fade { opacity: 0; pointer-events: none; }
+.controls-left, .controls-right { position: absolute; bottom: 30px; display: flex; gap: 15px; pointer-events: auto; }
+.controls-left { left: 30px; }
+.controls-right { right: 30px; flex-direction: column; align-items: flex-end; }
+.ctrl-btn { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #0ff; color: #fff; background: rgba(0,255,255,0.05); font-size: 24px; }
+.ctrl-rect { width: 130px; height: 70px; border-radius: 12px; border: 3px solid #0f0; color: #0f0; background: rgba(0,0,0,0.6); font-weight: 900; }
+.nitro { border-color: #f0f; color: #f0f; }
