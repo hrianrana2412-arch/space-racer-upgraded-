@@ -1,4 +1,3 @@
-// CORE ENGINE
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 40000);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -12,32 +11,27 @@ let curve, tubeMesh, shipBody, thruster;
 const shipGroup = new THREE.Group();
 const keys = {};
 
-// INITIALIZE WORLD
 function initWorld() {
     scene.clear();
     scene.background = new THREE.Color(0x000008);
     scene.fog = new THREE.FogExp2(0x000008, 0.00006);
-    scene.add(new THREE.AmbientLight(0xffffff, 1.4)); 
+    scene.add(new THREE.AmbientLight(0xffffff, 1.5)); 
     
     const pLight = new THREE.PointLight(0x00ffff, 6, 3000);
     pLight.position.set(0, 200, 0); scene.add(pLight);
 
     const starGeo = new THREE.BufferGeometry();
     const starPos = [];
-    for(let i=0; i<20000; i++) starPos.push((Math.random()-0.5)*25000, (Math.random()-0.5)*25000, (Math.random()-0.5)*25000);
+    for(let i=0; i<15000; i++) starPos.push((Math.random()-0.5)*25000, (Math.random()-0.5)*25000, (Math.random()-0.5)*25000);
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 4, transparent: true, opacity: 0.8})));
+    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color: 0xffffff, size: 4})));
 }
 
-// SHIP SYSTEMS
 window.setShip = (m) => { shipSettings.model = m; window.buildShip(); };
 window.buildShip = function() {
     shipGroup.clear(); shipGroup.scale.set(3, 3, 3);
     const mat = new THREE.MeshStandardMaterial({ color: 0x00ffff, metalness: 0.9, roughness: 0.05, emissive: 0x00ffff, emissiveIntensity: 0.6 });
-    
     const hull = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.6, 4.8), mat); shipGroup.add(hull);
-    const glass = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 16), new THREE.MeshPhongMaterial({color: 0x002222, shininess: 100}));
-    glass.position.set(0, 0.4, 1); glass.scale.set(1, 0.5, 2); shipGroup.add(glass);
 
     if (shipSettings.model === 'Zenith') {
         const fin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 3.2, 2), mat); fin.position.z = -1.5; shipGroup.add(fin);
@@ -53,7 +47,6 @@ window.buildShip = function() {
     scene.add(shipGroup);
 }
 
-// TRACK ARCHITECTURE
 window.generateTrack = function() {
     if(tubeMesh) scene.remove(tubeMesh);
     const pts = []; let r = 500;
@@ -62,19 +55,10 @@ window.generateTrack = function() {
         pts.push(new THREE.Vector3(r*(2+Math.cos(3*t))*Math.cos(2*t), r*(2+Math.cos(3*t))*Math.sin(2*t), r*Math.sin(3*t)));
     }
     curve = new THREE.CatmullRomCurve3(pts); curve.closed = true;
-    
     tubeMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 200, 90, 16, true), new THREE.MeshStandardMaterial({color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.1}));
     scene.add(tubeMesh);
-
-    // Neon Speed Gates
-    for(let i=0; i<60; i++) {
-        const gate = new THREE.Mesh(new THREE.TorusGeometry(95, 0.4, 8, 32), new THREE.MeshBasicMaterial({color: 0x00ffff, transparent: true, opacity: 0.4}));
-        const p = curve.getPointAt(i/60); gate.position.copy(p);
-        gate.lookAt(curve.getPointAt((i/60 + 0.01)%1)); scene.add(gate);
-    }
 }
 
-// MAIN LOOP
 function animate() {
     requestAnimationFrame(animate);
     if(!gameActive) {
@@ -83,64 +67,40 @@ function animate() {
     } else {
         const isNitro = keys['shift'] && nitro > 0;
         speed = Math.max(0, Math.min(speed + (keys['w'] ? 0.05 : -0.04), isNitro ? 8.5 : 4.2));
-        
-        let tilt = 0;
-        if (keys['a']) { lateral += 4.5; tilt = 0.6; } 
-        if (keys['d']) { lateral -= 4.5; tilt = -0.6; }
+        if (keys['a']) lateral += 4.5; if (keys['d']) lateral -= 4.5;
         lateral = Math.max(-75, Math.min(75, lateral));
         progress += speed * 0.0005;
 
         const p = curve.getPointAt(progress % 1);
         const look = curve.getPointAt((progress + 0.01) % 1);
         if(p && look) {
-            shipGroup.position.copy(p); shipGroup.lookAt(look); shipGroup.rotation.z = tilt;
+            shipGroup.position.copy(p); shipGroup.lookAt(look);
             const right = new THREE.Vector3().setFromMatrixColumn(shipGroup.matrix, 0);
             shipGroup.position.addScaledVector(right, -lateral);
-            
-            // TITAN TRACK-LOCK
             const down = new THREE.Vector3(0, -1, 0).applyQuaternion(shipGroup.quaternion);
             shipGroup.position.addScaledVector(down, 48); 
 
-            // ASPHALT DYNAMIC CAMERA
             const targetCam = shipGroup.position.clone().add(new THREE.Vector3(0, 18, -55).applyQuaternion(shipGroup.quaternion));
             camera.position.lerp(targetCam, 0.12);
             camera.lookAt(shipGroup.position);
             
-            if(isNitro) {
-                camera.fov = 105; 
-                camera.position.x += (Math.random()-0.5) * 0.8; // Screen Shake
-            } else { camera.fov = 75; }
+            if(isNitro) { camera.fov = 105; camera.position.x += (Math.random()-0.5) * 0.8; } else { camera.fov = 75; }
             camera.updateProjectionMatrix();
         }
 
-        // HUD UPDATES
-        const s = document.getElementById('speedo');
-        if(s) s.innerHTML = Math.floor(speed * 540) + "<span>KM/H</span>";
-        
-        const n = document.getElementById('nitro-fill');
-        if(n) n.style.width = nitro + "%";
-
-        if(isNitro) { 
-            nitro -= 0.9; 
-            thruster.scale.set(6,6,6); 
-            thruster.material.color.set(0xff00ff); 
-        } else { 
-            if(nitro < 100) nitro += 0.35; 
-            thruster.scale.set(1,1,1); 
-            thruster.material.color.set(0x00ffff); 
-        }
+        document.getElementById('speedo').innerHTML = Math.floor(speed * 540) + "<span>KM/H</span>";
+        document.getElementById('nitro-fill').style.width = nitro + "%";
+        if(isNitro) { nitro -= 0.9; thruster.scale.set(6,6,6); } 
+        else { if(nitro < 100) nitro += 0.35; thruster.scale.set(1,1,1); }
     }
     renderer.render(scene, camera);
 }
 
-// SAFE INITIALIZATION
-window.onload = () => {
-    initWorld(); window.generateTrack(); window.buildShip();
-    
-    // SAFE BINDING
-    const superBind = (id, k) => {
+// BINDING LOGIC
+function setupControls() {
+    const bind = (id, k) => {
         const el = document.getElementById(id);
-        if(!el) return console.warn(`Missing UI: ${id}`);
+        if(!el) return console.warn("Waiting for " + id);
         el.onmousedown = el.ontouchstart = (e) => { e.preventDefault(); keys[k] = true; };
         el.onmouseup = el.onmouseleave = el.ontouchend = () => keys[k] = false;
     };
@@ -157,20 +117,23 @@ window.onload = () => {
         };
     }
 
-    superBind('l-btn', 'a'); superBind('r-btn', 'd'); 
-    superBind('g-btn', 'w'); superBind('n-btn', 'shift');
+    bind('l-btn', 'a'); bind('r-btn', 'd'); bind('g-btn', 'w'); bind('n-btn', 'shift');
+}
 
-    // Loading Bar Simulation
+window.onload = () => {
+    initWorld(); window.generateTrack(); window.buildShip();
+    
+    // DELAY BINDING TO PREVENT NULL ERROR
+    setTimeout(setupControls, 500);
+
     let w = 0; const f = document.getElementById('load-fill');
     const iv = setInterval(() => { 
-        w += 5; 
-        if(f) f.style.width = w + '%'; 
+        w += 5; if(f) f.style.width = w + '%'; 
         if(w >= 100) { 
-            clearInterval(iv); 
-            document.getElementById('splash-screen').classList.add('fade');
+            clearInterval(iv); document.getElementById('splash-screen').classList.add('fade');
             setTimeout(() => document.getElementById('splash-screen').classList.add('hidden'), 1000);
         } 
-    }, 80);
+    }, 50);
 };
 
 window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
