@@ -2,29 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEON RACER - TITAN</title>
-    
+    <title>NEON RACER - ASPHALT TITAN</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Neon Racer">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1165/1165230.png">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1356/1356479.png">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="landscape-message">PLEASE ROTATE TO LANDSCAPE</div>
+
     <div id="splash-screen">
         <div class="loader-content">
             <h1 class="logo-text">NEON<br><span>RACER</span></h1>
-            <div class="loading-bar-container">
-                <div id="loading-progress"></div>
-            </div>
-            <p>INITIALIZING GALAXY...</p>
+            <div class="loading-bar-container"><div id="loading-progress"></div></div>
+            <p>SYNCING GALAXY...</p>
         </div>
     </div>
 
     <div id="game-container"></div>
+    <div id="nitro-overlay"></div>
 
     <div id="menu-overlay">
         <div id="left-panel">
@@ -35,45 +33,35 @@
                 <div class="grid">
                     <button onclick="window.setShip('Interceptor')">Interceptor</button>
                     <button onclick="window.setShip('Speeder')">Speeder</button>
-                    <button onclick="window.setShip('Tanker')">Tanker</button>
                     <button onclick="window.setShip('Vanguard')">Vanguard</button>
-                    <button onclick="window.setShip('Phantom')">Phantom</button>
                     <button onclick="window.setShip('Zenith')">Zenith</button>
                 </div>
             </div>
             <div class="section">
-                <h3>CIRCUIT SELECT</h3>
+                <h3>SECTORS</h3>
                 <div class="grid" id="track-list">
-                    <button onclick="window.generateTrack(1)">Sector 1</button>
-                    <button onclick="window.generateTrack(2)">Sector 2</button>
-                    <button onclick="window.generateTrack(3)">Sector 3</button>
-                    <button onclick="window.generateTrack(4)">Sector 4</button>
-                    <button onclick="window.generateTrack(5)">Sector 5</button>
-                    <button onclick="window.generateTrack(6)">Sector 6</button>
+                    <button onclick="window.generateTrack(1)">SEC-01</button>
+                    <button onclick="window.generateTrack(2)">SEC-02</button>
+                    <button onclick="window.generateTrack(3)">SEC-03</button>
                 </div>
             </div>
-            <button onclick="window.startGame()" id="start-btn">START RACE</button>
+            <button onclick="window.startGame()" id="start-btn">RACE START</button>
         </div>
     </div>
 
     <div id="ui-layer" class="hidden">
-        <div id="speed-display">0 KM/H</div>
+        <div id="leaderboard"></div>
+        <div id="speed-display">0 <span>KM/H</span></div>
         <div id="nitro-ui-container"><div id="nitro-bar"></div></div>
         
         <div class="control-group" id="steering-controls">
             <button class="game-btn" id="btn-left">◀</button>
             <button class="game-btn" id="btn-right">▶</button>
         </div>
-
         <div class="control-group" id="action-controls">
             <button class="game-btn nitro-btn" id="btn-nitro">NITRO</button>
             <button class="game-btn gas-btn" id="btn-gas">GAS</button>
         </div>
-    </div>
-
-    <div id="win-screen" class="hidden">
-        <h2 style="font-size: 5rem; text-shadow: 0 0 30px #0ff;">VICTORY</h2>
-        <button onclick="location.reload()" style="padding: 20px 50px; background: #0ff; border: none; font-family: 'Orbitron'; cursor: pointer;">REPLAY</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
