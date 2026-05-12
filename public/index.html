@@ -11,7 +11,7 @@
     
     <div id="splash-screen">
         <h1 class="logo-bright">NEON<span>RACER</span></h1>
-        <p>TITAN PROTOCOL ACTIVE</p>
+        <p class="status">TITAN PROTOCOL INITIALIZING...</p>
         <div class="loader"><div id="load-fill"></div></div>
     </div>
 
@@ -21,7 +21,7 @@
         <div class="panel">
             <h1 class="logo-bright">NEON<span>RACER</span></h1>
             <div class="box">
-                <h3>STATION</h3>
+                <h3>COMMAND STATION</h3>
                 <div class="grid">
                     <button onclick="window.setShip('Vanguard')">VANGUARD</button>
                     <button onclick="window.setShip('Zenith')">ZENITH</button>
@@ -33,9 +33,10 @@
     </div>
 
     <div id="ui-layer" class="hidden">
-        <div id="lb"><b>RANKINGS</b><br><span id="rank-list"></span></div>
+        <div id="lb"><b>RANKINGS</b><br><span id="rank-list">1. YOU</span></div>
         <div id="speedo">0<span>KM/H</span></div>
         <div id="nitro-gauge"><div id="nitro-fill"></div></div>
+        
         <div class="controls-left">
             <button class="btn-circle" id="l-btn">◀</button>
             <button class="btn-circle" id="r-btn">▶</button>
