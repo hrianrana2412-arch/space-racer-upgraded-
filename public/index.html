@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>NEON RACER: ASPHALT</title>
+    <title>NEON RACER: TITAN-ASPHALT</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -10,7 +10,8 @@
     <div id="landscape-lock">PLEASE ROTATE DEVICE</div>
     
     <div id="splash-screen">
-        <h1 class="logo">NEON<span>RACER</span></h1>
+        <h1 class="logo-bright">NEON<span>RACER</span></h1>
+        <p>TITAN PROTOCOL ACTIVE</p>
         <div class="loader"><div id="load-fill"></div></div>
     </div>
 
@@ -18,21 +19,21 @@
 
     <div id="menu-overlay">
         <div class="panel">
-            <h1>NEON RACER</h1>
+            <h1 class="logo-bright">NEON<span>RACER</span></h1>
             <div class="box">
-                <h3>GARAGE</h3>
+                <h3>STATION</h3>
                 <div class="grid">
-                    <button onclick="window.setShip('Vanguard')">Vanguard</button>
-                    <button onclick="window.setShip('Zenith')">Zenith</button>
-                    <button onclick="window.setShip('Phantom')">Phantom</button>
+                    <button onclick="window.setShip('Vanguard')">VANGUARD</button>
+                    <button onclick="window.setShip('Zenith')">ZENITH</button>
+                    <button onclick="window.setShip('Phantom')">PHANTOM</button>
                 </div>
             </div>
-            <button id="start-race-btn" class="start-big">START RACE</button>
+            <button id="start-race-btn" class="start-big">INITIATE RACE</button>
         </div>
     </div>
 
     <div id="ui-layer" class="hidden">
-        <div id="lb"></div>
+        <div id="lb"><b>RANKINGS</b><br><span id="rank-list"></span></div>
         <div id="speedo">0<span>KM/H</span></div>
         <div id="nitro-gauge"><div id="nitro-fill"></div></div>
         <div class="controls-left">
