@@ -11,17 +11,16 @@ body { background: #000; font-family: 'Orbitron', sans-serif; overflow: hidden; 
 .loader { width: 200px; height: 4px; background: #222; margin-top: 20px; }
 #load-fill { width: 0%; height: 100%; background: #0ff; transition: 0.2s; }
 
-#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: rgba(0,0,0,0.8); }
+#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: rgba(0,0,0,0.85); }
 .panel { width: 350px; padding: 30px; display: flex; flex-direction: column; justify-content: center; }
-@media (max-width: 700px) { .panel { width: 100%; align-items: center; } }
+@media (max-width: 768px) { .panel { width: 100%; align-items: center; } }
 .box { background: rgba(0,255,255,0.1); border-left: 4px solid #0ff; padding: 15px; margin: 10px 0; width: 100%; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-button { background: #111; border: 1px solid #0ff; color: #0ff; padding: 12px; font-family: 'Orbitron'; cursor: pointer; border-radius: 4px; transition: 0.2s; }
-button:active { background: #0ff; color: #000; }
-.start-big { background: #0ff; color: #000; font-weight: 900; font-size: 1.5rem; margin-top: 20px; border: none; width: 100%; height: 60px; }
+button { background: #111; border: 1px solid #0ff; color: #0ff; padding: 12px; font-family: 'Orbitron'; cursor: pointer; border-radius: 4px; }
+.start-big { background: #0ff; color: #000; font-weight: 900; font-size: 1.5rem; margin-top: 20px; border: none; width: 100%; height: 60px; box-shadow: 0 0 20px #0ff; }
 
 #ui-layer { position: absolute; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-#lb { position: absolute; top: 20px; left: 20px; font-size: 11px; color: #fff; background: rgba(0,255,255,0.1); padding: 15px; border-radius: 0 15px 15px 0; border-left: 4px solid #0ff; backdrop-filter: blur(5px); }
+#lb { position: absolute; top: 20px; left: 20px; font-size: 11px; color: #fff; background: rgba(0,255,255,0.1); padding: 15px; border-left: 4px solid #0ff; backdrop-filter: blur(5px); }
 #speedo { position: absolute; bottom: 100px; right: 40px; font-size: 55px; font-weight: 900; font-style: italic; text-shadow: 0 0 20px #0ff; color: #fff; }
 #speedo span { font-size: 18px; margin-left: 5px; color: #0ff; }
 #nitro-gauge { position: absolute; bottom: 90px; right: 40px; width: 200px; height: 8px; background: #222; border: 1px solid #f0f; }
@@ -32,7 +31,7 @@ button:active { background: #0ff; color: #000; }
 .controls-right { right: 30px; align-items: flex-end; }
 .btn-circle { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #0ff; font-size: 25px; background: rgba(0,255,255,0.1); color: #fff; }
 .btn-rect { width: 110px; height: 65px; border-radius: 12px; border: 3px solid #0f0; background: rgba(0,255,255,0.05); color: #0f0; font-weight: 900; }
-.nitro { border-color: #f0f; color: #f0f; margin-bottom: 10px; height: 55px; }
+.nitro { border-color: #f0f; color: #f0f; margin-bottom: 10px; }
 
 .hidden { display: none !important; }
 .fade { opacity: 0; pointer-events: none; }
