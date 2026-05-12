@@ -1,48 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
+* { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-user-select: none; user-select: none; }
+body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; }
 
-* { 
-    margin: 0; padding: 0; box-sizing: border-box; 
-    touch-action: none; -webkit-user-select: none; user-select: none;
-    -webkit-tap-highlight-color: transparent; 
+/* LANDSCAPE MESSAGE */
+#landscape-message {
+    display: none; position: fixed; z-index: 10000; background: #000; color: #0ff;
+    width: 100vw; height: 100vh; text-align: center; padding-top: 40vh; font-weight: 900;
 }
+@media screen and (orientation: portrait) { #landscape-message { display: block; } }
 
-body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Orbitron', sans-serif; color: #fff; }
-
-/* --- SPLASH SCREEN --- */
-#splash-screen {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: radial-gradient(circle, #001111 0%, #000 100%);
-    z-index: 9999; display: flex; align-items: center; justify-content: center;
-    transition: opacity 1s ease-out;
-}
-.loader-content { text-align: center; }
-.logo-text { font-size: 3.5rem; color: #fff; text-shadow: 0 0 20px #0ff; line-height: 0.9; margin-bottom: 20px; }
-.logo-text span { font-size: 2.2rem; color: #f0f; text-shadow: 0 0 20px #f0f; }
-.loading-bar-container { width: 200px; height: 4px; background: rgba(255,255,255,0.1); margin: 20px auto; overflow: hidden; }
-#loading-progress { width: 0%; height: 100%; background: #0ff; box-shadow: 0 0 10px #0ff; transition: width 0.3s; }
+#splash-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 1s; }
+.logo-text { font-size: 3rem; color: #fff; text-shadow: 0 0 20px #0ff; line-height: 1; }
+.logo-text span { color: #f0f; text-shadow: 0 0 20px #f0f; }
+#loading-progress { width: 0%; height: 4px; background: #0ff; box-shadow: 0 0 10px #0ff; transition: 0.3s; }
 .fade-out { opacity: 0; pointer-events: none; }
 
-/* --- GAME UI --- */
-#game-container { position: absolute; width: 100%; height: 100%; z-index: 1; }
 #menu-overlay { position: absolute; width: 100%; height: 100%; z-index: 100; display: flex; background: rgba(0,0,0,0.85); }
-#left-panel { width: 400px; padding: 25px; display: flex; flex-direction: column; justify-content: center; }
-@media (max-width: 768px) { #left-panel { width: 100%; align-items: center; background: rgba(0,0,0,0.9); } }
+#left-panel { width: 350px; padding: 20px; display: flex; flex-direction: column; justify-content: center; }
+@media (max-width: 768px) { #left-panel { width: 100%; align-items: center; background: rgba(0,0,0,0.95); } }
+
 .section { background: rgba(0,255,255,0.1); border-left: 4px solid #0ff; padding: 10px; margin: 5px 0; width: 100%; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-h1 { color: #fff; text-shadow: 0 0 15px #0ff; margin-bottom: 15px; }
-button { background: rgba(0,0,0,0.7); border: 1px solid #0ff; color: #0ff; padding: 10px; cursor: pointer; font-family: 'Orbitron'; font-size: 11px; }
-#start-btn { background: #0ff !important; color: #000 !important; font-weight: 900; font-size: 1.2rem; height: 50px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+button { background: rgba(255,255,255,0.05); border: 1px solid #0ff; color: #0ff; padding: 10px; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; }
+#start-btn { background: #0ff !important; color: #000 !important; font-weight: 900; font-size: 1.2rem; height: 50px; margin-top: 10px; }
 
-#ui-layer { position: absolute; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
-#speed-display { position: absolute; top: 20px; width: 100%; text-align: center; font-size: 35px; color: #fff; text-shadow: 0 0 20px #0ff; font-weight: 900; }
-#nitro-ui-container { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); width: 200px; height: 10px; border: 1px solid #f0f; }
-#nitro-bar { width: 100%; height: 100%; background: #f0f; box-shadow: 0 0 15px #f0f; }
+#leaderboard { position: absolute; top: 20px; left: 20px; border-left: 3px solid #0ff; padding-left: 10px; background: rgba(0,0,0,0.4); z-index: 60; }
+.lb-row { font-size: 11px; margin: 2px 0; color: #aaa; }
+#rank-player { color: #0ff; font-weight: 900; }
 
-.control-group { position: absolute; bottom: 30px; display: flex; gap: 20px; pointer-events: auto; }
-#steering-controls { left: 30px; }
-#action-controls { right: 30px; flex-direction: column-reverse; align-items: flex-end; }
-.game-btn { width: 85px; height: 85px; background: rgba(0,255,255,0.1); border: 3px solid #0ff; color: #fff; border-radius: 50%; font-size: 24px; }
+#speed-display { position: absolute; bottom: 120px; right: 30px; font-size: 50px; color: #fff; text-shadow: 0 0 20px #0ff; font-style: italic; }
+#nitro-bar { width: 100%; height: 6px; background: #f0f; box-shadow: 0 0 15px #f0f; }
+#nitro-ui-container { position: absolute; bottom: 110px; right: 30px; width: 200px; border: 1px solid #f0f; }
+
+.control-group { position: absolute; bottom: 30px; display: flex; gap: 15px; pointer-events: auto; }
+#steering-controls { left: 20px; }
+#action-controls { right: 20px; align-items: flex-end; }
+.game-btn { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #0ff; color: #fff; background: rgba(255,255,255,0.1); font-size: 24px; }
 .gas-btn { width: 110px; height: 110px; border-color: #0f0; color: #0f0; border-radius: 20px; }
-.nitro-btn { width: 75px; height: 75px; border-color: #f0f; color: #f0f; font-size: 14px; }
-
+.nitro-btn { width: 70px; height: 70px; border-color: #f0f; color: #f0f; font-size: 12px; margin-bottom: 5px; }
 .hidden { display: none !important; }
