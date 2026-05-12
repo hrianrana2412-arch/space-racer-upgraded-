@@ -11,6 +11,7 @@
     
     <div id="splash-screen">
         <h1 class="logo-bright">NEON<span>RACER</span></h1>
+        <p>TITAN PROTOCOL ACTIVE</p>
         <div class="loader"><div id="load-fill"></div></div>
     </div>
 
@@ -19,30 +20,30 @@
     <div id="menu-overlay">
         <div class="panel">
             <h1 class="logo-bright">NEON<span>RACER</span></h1>
-            <div class="box">
-                <h3>GARAGE</h3>
-                <div class="grid">
+            <div class="garage-box">
+                <h3>SELECT CRAFT</h3>
+                <div class="ship-grid">
                     <button onclick="window.setShip('Vanguard')">VANGUARD</button>
                     <button onclick="window.setShip('Zenith')">ZENITH</button>
                     <button onclick="window.setShip('Phantom')">PHANTOM</button>
                 </div>
             </div>
-            <button id="start-race-btn" class="start-big">INITIATE RACE</button>
+            <button id="start-btn" class="btn-main">INITIATE RACE</button>
         </div>
     </div>
 
-    <div id="ui-layer" class="hidden">
-        <div id="lb"><b>RANKINGS</b><br><span id="rank-list">1. YOU</span></div>
+    <div id="ui-layer" style="display: none;">
+        <div id="hud-top"><b>POS 1/4</b></div>
         <div id="speedo">0<span>KM/H</span></div>
-        <div id="nitro-gauge"><div id="nitro-fill"></div></div>
+        <div id="nitro-bar"><div id="nitro-fill"></div></div>
         
         <div class="controls-left">
-            <button class="btn-circle" id="l-btn">◀</button>
-            <button class="btn-circle" id="r-btn">▶</button>
+            <button class="ctrl-btn" id="l-btn">◀</button>
+            <button class="ctrl-btn" id="r-btn">▶</button>
         </div>
         <div class="controls-right">
-            <button class="btn-rect nitro" id="n-btn">NITRO</button>
-            <button class="btn-rect drive" id="g-btn">GAS</button>
+            <button class="ctrl-rect" id="n-btn">NITRO</button>
+            <button class="ctrl-rect" id="g-btn">DRIVE</button>
         </div>
     </div>
 
