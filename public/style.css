@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap');
 * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; -webkit-user-select: none; }
-body { background: #000; font-family: 'Orbitron', sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+body { background: #000; font-family: 'Orbitron', sans-serif; overflow: hidden; height: 100vh; }
 
-#landscape-lock { display: none; position: fixed; z-index: 9999; background: #000; color: #0ff; width: 100%; height: 100%; text-align: center; padding-top: 45vh; font-weight: 900; }
+#landscape-lock { display: none; position: fixed; z-index: 9999; background: #000; color: #0ff; width: 100%; height: 100%; text-align: center; padding-top: 45vh; }
 @media screen and (orientation: portrait) { #landscape-lock { display: block; } }
 
 #splash-screen { position: fixed; width: 100%; height: 100%; background: #000; z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.8s; }
@@ -11,12 +11,12 @@ body { background: #000; font-family: 'Orbitron', sans-serif; overflow: hidden; 
 .loader { width: 200px; height: 4px; background: #222; margin-top: 20px; }
 #load-fill { width: 0%; height: 100%; background: #0ff; transition: 0.2s; }
 
-#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
-.panel { width: 350px; padding: 20px; display: flex; flex-direction: column; }
-.box { background: rgba(0,255,255,0.1); border-left: 4px solid #0ff; padding: 15px; margin: 10px 0; }
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-button { background: #111; border: 1px solid #0ff; color: #0ff; padding: 12px; font-family: 'Orbitron'; cursor: pointer; border-radius: 4px; }
-.start-big { background: #0ff; color: #000; font-weight: 900; font-size: 1.5rem; border: none; width: 100%; height: 60px; box-shadow: 0 0 20px #0ff; }
+#menu-overlay { position: absolute; z-index: 100; width: 100%; height: 100%; display: flex; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
+.panel { width: 350px; text-align: center; }
+.box { background: rgba(0,255,255,0.1); border-left: 4px solid #0ff; padding: 15px; margin: 15px 0; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button { background: #111; border: 1px solid #0ff; color: #0ff; padding: 10px; font-family: 'Orbitron'; cursor: pointer; }
+.start-big { background: #0ff; color: #000; font-weight: 900; font-size: 1.5rem; width: 100%; height: 60px; border: none; box-shadow: 0 0 20px #0ff; }
 
 #ui-layer { position: absolute; width: 100%; height: 100%; z-index: 50; pointer-events: none; }
 #lb { position: absolute; top: 20px; left: 20px; font-size: 11px; color: #fff; background: rgba(0,255,255,0.2); padding: 10px; border-left: 3px solid #0ff; }
@@ -28,8 +28,8 @@ button { background: #111; border: 1px solid #0ff; color: #0ff; padding: 12px; f
 .controls-left, .controls-right { position: absolute; bottom: 30px; display: flex; gap: 20px; pointer-events: auto; }
 .controls-left { left: 30px; }
 .controls-right { right: 30px; align-items: flex-end; flex-direction: column; }
-.btn-circle { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #0ff; font-size: 25px; background: rgba(0,255,255,0.1); color: #fff; box-shadow: 0 0 15px rgba(0,255,255,0.3); }
-.btn-rect { width: 120px; height: 70px; border-radius: 12px; border: 3px solid #0f0; background: rgba(0,0,0,0.5); color: #0f0; font-weight: 900; }
+.btn-circle { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #0ff; color: #fff; background: rgba(0,255,255,0.1); font-size: 20px; }
+.btn-rect { width: 110px; height: 60px; border-radius: 10px; border: 3px solid #0f0; color: #0f0; background: rgba(0,0,0,0.5); font-weight: 900; }
 .nitro { border-color: #f0f; color: #f0f; height: 50px; margin-bottom: 5px; }
 
 .hidden { display: none !important; }
